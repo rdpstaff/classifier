@@ -1,0 +1,21 @@
+<trainsetNo>1</trainsetNo><version>test</version><file>bergeyTrainingTree</file>
+<TreeNode name="BACTERIA" taxid="1" rank="DOMAIN" parentTaxid="0" leaveCount="4123" genusIndex="-1"></TreeNode>
+<TreeNode name="NITROSPIRA" taxid="62" rank="PHYLUM" parentTaxid="1" leaveCount="5" genusIndex="-1"></TreeNode>
+<TreeNode name="NITROSPIRA" taxid="63" rank="CLASS" parentTaxid="62" leaveCount="5" genusIndex="-1"></TreeNode>
+<TreeNode name="NITROSPIRALES" taxid="64" rank="ORDER" parentTaxid="63" leaveCount="5" genusIndex="-1"></TreeNode>
+<TreeNode name="NITROSPIRACEAE" taxid="65" rank="FAMILY" parentTaxid="64" leaveCount="5" genusIndex="-1"></TreeNode>
+<TreeNode name="NITROSPIRA" taxid="66" rank="GENUS" parentTaxid="65" leaveCount="1" genusIndex="0"></TreeNode>
+<TreeNode name="THERMODESULFOVIBRIO" taxid="69" rank="GENUS" parentTaxid="65" leaveCount="2" genusIndex="1"></TreeNode>
+<TreeNode name="LEPTOSPIRILLUM" taxid="67" rank="GENUS" parentTaxid="65" leaveCount="2" genusIndex="2"></TreeNode>
+<TreeNode name="PLANCTOMYCETES" taxid="1247" rank="PHYLUM" parentTaxid="1" leaveCount="11" genusIndex="-1"></TreeNode>
+<TreeNode name="PLANCTOMYCETACIA" taxid="1248" rank="CLASS" parentTaxid="1247" leaveCount="11" genusIndex="-1"></TreeNode>
+<TreeNode name="PLANCTOMYCETALES" taxid="1249" rank="ORDER" parentTaxid="1248" leaveCount="11" genusIndex="-1"></TreeNode>
+<TreeNode name="PLANCTOMYCETACEAE" taxid="1250" rank="FAMILY" parentTaxid="1249" leaveCount="11" genusIndex="-1"></TreeNode>
+<TreeNode name="PIRELLULA" taxid="1254" rank="GENUS" parentTaxid="1250" leaveCount="3" genusIndex="3"></TreeNode>
+<TreeNode name="PLANCTOMYCES" taxid="1251" rank="GENUS" parentTaxid="1250" leaveCount="4" genusIndex="4"></TreeNode>
+<TreeNode name="ISOSPHAERA" taxid="1253" rank="GENUS" parentTaxid="1250" leaveCount="1" genusIndex="5"></TreeNode>
+<TreeNode name="GEMMATA" taxid="1252" rank="GENUS" parentTaxid="1250" leaveCount="3" genusIndex="6"></TreeNode>
+<TreeNode name="CHLOROBI" taxid="151" rank="PHYLUM" parentTaxid="1" leaveCount="8" genusIndex="-1"></TreeNode>
+<TreeNode name="CHLOROBIA" taxid="152" rank="CLASS" parentTaxid="151" leaveCount="8" genusIndex="-1"></TreeNode>
+<TreeNode name="CHLOROBIALES" taxid="153" rank="ORDER" parentTaxid="152" leaveCount="8" genusIndex="-1"></TreeNode>
+<TreeNode name="CHLOROBIACEAE" taxid="154" rank="FAMILY" parentTaxid="153" leaveCount="8" genusIndex="-1"></TreeNode>
