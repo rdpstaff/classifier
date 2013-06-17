@@ -85,7 +85,7 @@ public class TrainingInfo {
 
     /** For a given word w1 and the reverse complement word w2,
      * calculates the difference between the log word prior of w1 and w2 and saves to an array.
-     * Repeats for every possible word of size 8. 
+     * Repeats for every possible word of size 8.
      */
     public void generateWordPairDiffArr(int[] word, int beginIndex) {
 
@@ -260,6 +260,20 @@ public class TrainingInfo {
             reverse = true;
         }
         return reverse;
+    }
 
+    public boolean isSeqReversed(int[] wordIndexArr, int wordCount) {
+        boolean reverse = false;
+        float priorDiff = 0;
+        for (int offset = 0; offset < wordCount; offset++) {
+            int wordIndex = wordIndexArr[offset];
+            if (wordIndex >= 0) {
+                priorDiff += getWordPairPriorDiff(wordIndex);
+            }
+        }
+        if (priorDiff < 0) {
+            reverse = true;
+        }
+        return reverse;
     }
 }

@@ -1,0 +1,6 @@
+<ivy-module version="2.0">
+    <info organisation="edu.cme.rdp" module="classifier"/>
+    <dependencies>
+		<dependency org="commons-cli" name="commons-cli" rev="1.2"/>
+    </dependencies>
+</ivy-module>

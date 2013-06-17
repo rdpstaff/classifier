@@ -12,26 +12,33 @@ import edu.msu.cme.rdp.readseq.utils.IUBUtilities;
 import edu.msu.cme.rdp.readseq.utils.SeqUtils;
 import java.io.StringReader;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * A Sequence containing the sequence information.
- * @author  wangqion
+ *
+ * @author wangqion
  * @version
  */
 public class ClassifierSequence extends Sequence {
 
-    /** The number of rna bases (ATGC). Initially set to 4. */
+    /**
+     * The number of rna bases (ATGC). Initially set to 4.
+     */
     public static final int RNA_BASES = 4;
-    /** The size of a word. Initially set to 8. */
+    /**
+     * The size of a word. Initially set to 8.
+     */
     public static final int WORDSIZE = 8;
-    /** The mask for converting a string to integer */
+    /**
+     * The mask for converting a string to integer
+     */
     public static final int MASK = (1 << (WORDSIZE * 2)) - 1;
-
     private boolean reverse = false;
     private Integer goodWordCount = null; // the number of words with only valid bases
     private static final int MAX_ASCII = 128;
-    private static int[] charIntegerLookup = new int[MAX_ASCII];
-    private static int[] intComplementLookup = new int[RNA_BASES];
+    private final static int[] charIntegerLookup = new int[MAX_ASCII];
+    private final static int[] intComplementLookup = new int[RNA_BASES];
 
     static {
         // initialize the integer complement look up table
@@ -57,7 +64,9 @@ public class ClassifierSequence extends Sequence {
         charIntegerLookup['c'] = 3;
     }
 
-    /** Creates new ParsedSequence. */
+    /**
+     * Creates new ParsedSequence.
+     */
     public ClassifierSequence(Sequence seq) {
         this(seq.getSeqName(), seq.getDesc(), seq.getSeqString());
     }
@@ -66,7 +75,8 @@ public class ClassifierSequence extends Sequence {
         super(seqName, desc, SeqUtils.getUnalignedSeqString(seqString));
     }
 
-    /** Sets the sequence string.
+    /**
+     * Sets the sequence string.
      */
     protected void setSeqString(String s) {
         seqString = s;
@@ -79,7 +89,9 @@ public class ClassifierSequence extends Sequence {
         return reverse;
     }
 
-    /** Returns a Sequence object whose sequence string is the reverse complement of the current rRNA sequence string.
+    /**
+     * Returns a Sequence object whose sequence string is the reverse complement
+     * of the current rRNA sequence string.
      */
     public ClassifierSequence getReversedSeq() {
         ClassifierSequence retval = new ClassifierSequence(seqName, desc, IUBUtilities.reverseComplement(seqString));
@@ -87,7 +99,8 @@ public class ClassifierSequence extends Sequence {
         return retval;
     }
 
-    /**Returns the reverse complement of the word in an integer array format.
+    /**
+     * Returns the reverse complement of the word in an integer array format.
      */
     public static int[] getReversedWord(int[] word) {
         int length = word.length;
@@ -111,51 +124,55 @@ public class ClassifierSequence extends Sequence {
         return wordIndex;
     }
 
-    /** Fetches every overlapping word from the sequence string,
-     * changes each word to integer format and saves in an array.
+    /**
+     * Fetches every overlapping word from the sequence string, changes each
+     * word to integer format and saves in an array.
      */
     public int[] createWordIndexArr() {
         int[] wordIndexArr = new int[this.seqString.length()];
-        for (int w = 0; w < wordIndexArr.length; w++) {
-            wordIndexArr[w] = -1;
-        }
+        createWordIndexArr(wordIndexArr);
+        return wordIndexArr;
+    }
 
-        StringReader in = new StringReader(this.seqString);
+    /**
+     * Fetches every overlapping word from the sequence string, changes each
+     * word to integer format and saves in an array.
+     */
+    public void createWordIndexArr(int[] wordIndexArr) {
+        if (wordIndexArr.length < this.seqString.length()) {
+            throw new IllegalArgumentException("wordIndexArr buffer doesn't have enough room in it");
+        }
+        Arrays.fill(wordIndexArr, -1);
+
         int wordCount = 0;  // number of good words in a query sequence
         int count = 0;
         int wordIndex = 0;
-        int charIndex = 0;
-        int c;
-        try {
-            while ((c = in.read()) != -1) {
-		if(c > 0 && c < 128) {
-		    charIndex = charIntegerLookup[c];
-		} else {
-		    charIndex = -1;
-		}
-                if (charIndex == -1) {
-                    wordIndex = 0;
-                    count = 0;
-                } else {
-                    count++;
-                    wordIndex <<= 2;
-                    wordIndex = wordIndex & (MASK);
-                    wordIndex = wordIndex | charIndex;
+        int charIndex;
 
-                    if (count == WORDSIZE) {
-                        wordIndexArr[wordCount] = wordIndex;
-                        wordCount++;
-                        count--;
-                    }
+        for (char c  : seqString.toCharArray()) {
+            if (c > 0 && c < 128) {
+                charIndex = charIntegerLookup[c];
+            } else {
+                charIndex = -1;
+            }
+
+            if (charIndex == -1) {
+                wordIndex = 0;
+                count = 0;
+            } else {
+                count++;
+                wordIndex <<= 2;
+                wordIndex = wordIndex & (MASK);
+                wordIndex = wordIndex | charIndex;
+
+                if (count == WORDSIZE) {
+                    wordIndexArr[wordCount] = wordIndex;
+                    wordCount++;
+                    count--;
                 }
             }
-            this.goodWordCount = wordCount;
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            in.close();
         }
-        return wordIndexArr;
+        this.goodWordCount = wordCount;
     }
 
     /**
@@ -165,6 +182,6 @@ public class ClassifierSequence extends Sequence {
         if (goodWordCount == null) {
             this.createWordIndexArr();
         }
-        return goodWordCount.intValue();
+        return goodWordCount;
     }
 }

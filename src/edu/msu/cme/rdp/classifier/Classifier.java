@@ -1,6 +1,6 @@
 /*
- * Classifier.java 
- * 
+ * Classifier.java
+ *
  * Copyright 2006 Michigan State University Board of Trustees
  *
  * Created on September 18, 2003, 6:05 PM
@@ -26,16 +26,18 @@ public class Classifier {
     private final int MAX_NUM_OF_WORDS = 5000;
     /** The minimum number of bases per sequence. Initially set to 200. */
     public static final int MIN_SEQ_LEN = 50;
-    
+    public static final int MAX_SEQ_LEN = 5000;
+
     public static final int MIN_GOOD_WORDS = MIN_SEQ_LEN - ClassifierSequence.WORDSIZE;
     public static final int MIN_BOOTSTRSP_WORDS = 5;   // mininum number of words needs for bootstrap
-    
+
     private float[][] querySeq_wordProbArr;  // 2-D array for the query sequence
     // the 1st dim is the MAX_NUM_OF_WORDS, the 2nd dim is the number of genus nodes
     private float[] accumulateProbArr;   // an array to temporary store the accumulative probability
     private long seed = 1;
     private Random randomGenerator = new Random(seed);
     private Random randomSelectGenera = new Random();
+    private int[] wordIndexArr = new int[1024];
 
     /** Creates new Classifier.  */
     Classifier(TrainingInfo t) {
@@ -47,9 +49,9 @@ public class Classifier {
 
     /**Takes a query sequence, returns the classification result.
      * For each query sequence, first assign it to a genus node using all the words for calculation.
-     * Then randomly chooses one-eighth of the all overlapping words in the query 
-     * to calculate the joint probability. The number of times a genus was selected out of 
-     * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus. 
+     * Then randomly chooses one-eighth of the all overlapping words in the query
+     * to calculate the joint probability. The number of times a genus was selected out of
+     * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus.
      * @throws ShortSequenceException if the sequence length is less than the minimum sequence length.
      */
     public ClassificationResult classify(Sequence seq) {
@@ -59,25 +61,32 @@ public class Classifier {
     public ClassificationResult classify(ClassifierSequence seq) {
         return classify(seq, MIN_BOOTSTRSP_WORDS );
     }
-     
+
     /**Takes a query sequence, returns the classification result.
      * For each query sequence, first assign it to a genus node using all the words for calculation.
-     * Then randomly chooses one-eighth of the all overlapping words in the query 
-     * to calculate the joint probability. The number of times a genus was selected out of 
-     * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus. 
+     * Then randomly chooses one-eighth of the all overlapping words in the query
+     * to calculate the joint probability. The number of times a genus was selected out of
+     * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus.
      * @throws ShortSequenceException if the sequence length is less than the minimum sequence length.
      */
     public ClassificationResult classify(ClassifierSequence seq, int min_bootstrap_words) {
         GenusWordConditionalProb gProb = null;
         int nodeListSize = trainingInfo.getGenusNodeListSize();
         boolean reversed = false;
-        
-        if (trainingInfo.isSeqReversed(seq)) {
+        int wordCount = seq.getSeqString().length();
+
+        if(wordIndexArr.length < seq.getSeqString().length()) {
+            wordIndexArr = new int[seq.getSeqString().length()];
+        }
+
+        seq.createWordIndexArr(wordIndexArr);
+
+        if (trainingInfo.isSeqReversed(wordIndexArr, wordCount)) {
             seq = seq.getReversedSeq();
+            seq.createWordIndexArr(wordIndexArr);
             reversed = true;
         }
-        
-        int[] wordIndexArr = seq.createWordIndexArr();
+
         int goodWordCount = seq.getGoodWordCount();
 
         if (seq.getSeqString().length() < MIN_SEQ_LEN) {
@@ -96,7 +105,7 @@ public class Classifier {
         }
 
         int NUM_OF_SELECTIONS = Math.max( goodWordCount / ClassifierSequence.WORDSIZE, min_bootstrap_words);
-        
+
         for (int offset = 0; offset < goodWordCount; offset++) {
             int wordIndex = wordIndexArr[offset];
             float wordPrior = trainingInfo.getLogWordPrior(wordIndex);
@@ -127,10 +136,10 @@ public class Classifier {
             if (accumulateProbArr[node] > maxPosteriorProb) {
                 determinedNodeIndex = node;
                 maxPosteriorProb = accumulateProbArr[node];
-            }            
+            }
             accumulateProbArr[node] = 0; // reset to 0
-        }                     
-        
+        }
+
         HashMap<HierarchyTree, RankAssignment> determinedMap = new HashMap<HierarchyTree, RankAssignment>();
         HierarchyTree aNode = trainingInfo.getGenusNodebyIndex(determinedNodeIndex);
         while (aNode != null) {
@@ -138,6 +147,7 @@ public class Classifier {
             aNode = aNode.getParent();
         }
 
+        randomGenerator.setSeed(seed);  // use the seed to choose the same random words for the same sequence
 
         // for each run, pick the genus node which has the highest posterior probability
         boolean tied = false;
@@ -152,7 +162,7 @@ public class Classifier {
 
             maxPosteriorProb = Float.NEGATIVE_INFINITY;
             int bestNodeIndex = 0;
-            
+
             for (int node = 0; node < nodeListSize; node++) {
                 if (accumulateProbArr[node] >= maxPosteriorProb) {
                     if (accumulateProbArr[node] > maxPosteriorProb){
@@ -165,7 +175,7 @@ public class Classifier {
                     }
                 }
             }
-            
+
             // if the maxPosteriorProb tied between multiple genera, we need to radomly pick one
             if (tied){
                 ArrayList<Integer> possibleSet = new ArrayList<Integer>();
@@ -174,18 +184,18 @@ public class Classifier {
                         possibleSet.add(node);
                     }
                 }
-                
-                bestNodeIndex = possibleSet.get(randomSelectGenera.nextInt(possibleSet.size()));               
+
+                bestNodeIndex = possibleSet.get(randomSelectGenera.nextInt(possibleSet.size()));
             }
-            
+
              for (int node = 0; node < nodeListSize; node++) {
                  accumulateProbArr[node] = 0; // reset to 0
              }
-            
+
             addConfidence(trainingInfo.getGenusNodebyIndex(bestNodeIndex), determinedMap);
         }
-        
-        
+
+
         List finalAssigns = getFinalResultList(determinedMap, trainingInfo.getGenusNodebyIndex(determinedNodeIndex));
         ClassificationResult finalResult = new ClassificationResult(seq, reversed, finalAssigns, trainingInfo.getHierarchyInfo());
 
@@ -262,7 +272,7 @@ public class Classifier {
 
     /** Returns a list of RankAssignment in which root is the first item.
      * Each node in the list is the one which has the highest confidence
-     * among the children of the previous node. 
+     * among the children of the previous node.
      * Algorithm: From the top rank, select the child that has the highest votes,
      * traverse down to the bottom rank level.
      */

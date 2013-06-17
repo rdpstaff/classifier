@@ -1,1 +1,7 @@
 For training data please download from http://sourceforge.net/projects/rdp-classifier/?source=directory
+
+QUICKSTART
+===========
+
+ant jar
+java -jar dist/classifier.jar

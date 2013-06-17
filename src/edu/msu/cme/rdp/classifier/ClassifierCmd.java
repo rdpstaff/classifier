@@ -54,9 +54,10 @@ public class ClassifierCmd {
             + " if it's located outside of data/classifier/."
             + "\nNote: the training files and the property file should be in the same directory."
             + "\nThe default property file is set to data/classifier/" + ClassifierFactory.RRNA_16S_GENE + "/rRNAClassifier.properties.";
-    public static final String FORMAT_DESC = "all tab delimited output format: [allrank|fixrank|db]. Default is allrank. "
+    public static final String FORMAT_DESC = "all tab delimited output format: [allrank|fixrank|filterbyconf|db]. Default is allrank. "
             + "\n allrank: outputs the results for all ranks applied for each sequence: seqname, orientation, taxon name, rank, conf, ..."
             + "\n fixrank: only outputs the results for fixed ranks in order: domain, phylum, class, order, family, genus"
+            + "\n filterbyconf: only outputs the results for major ranks as in fixrank, results below the confidence cutoff were bin to a higher rank unclassified_node"
             + "\n db: outputs the seqname, trainset_no, tax_id, conf. This is good for storing in a database";
     public static final String GENE_DESC = ClassifierFactory.RRNA_16S_GENE + "|" + ClassifierFactory.FUNGALLSU_GENE
             + ", the default training model for 16S rRNA or Fungal LSU genes. This option will be overwritten by --train_propfile option";
@@ -184,10 +185,12 @@ public class ClassifierCmd {
                     format = ClassificationResultFormatter.FORMAT.allRank;
                 } else if (f.equalsIgnoreCase("fixrank")) {
                     format = ClassificationResultFormatter.FORMAT.fixRank;
+                } else if (f.equalsIgnoreCase("filterbyconf")) {
+                    format = ClassificationResultFormatter.FORMAT.filterbyconf;
                 } else if (f.equalsIgnoreCase("db")) {
                     format = ClassificationResultFormatter.FORMAT.dbformat;
-                } else {
-                    throw new IllegalArgumentException("Not valid output format, only allrank, fixrank and db allowed");
+                }else {
+                    throw new IllegalArgumentException("Not valid output format, only allrank, fixrank, filterbyconf and db allowed");
                 }
             }
             if (line.hasOption(GENE_SHORT_OPT)) {

@@ -1,3 +1,8 @@
+*~
+#*#
 .svn
 build
 dist
+private/
+lib/
+src/data

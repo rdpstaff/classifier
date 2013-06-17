@@ -2,7 +2,7 @@
  * ClassifierFactory.java
  *
  * Copyright 2006 Michigan State University Board of Trustees
- * 
+ *
  * Created on November 6, 2003, 10:56 AM
  */
 package edu.msu.cme.rdp.classifier.utils;
@@ -78,8 +78,8 @@ public class ClassifierFactory {
 
     /** Sets the property file which contains the mapping of the training files.
      * The actually training data files should be in the same directory as this property file.
-     * To override the default property location, this method must be called before 
-     * the first ClassifierFactory.getFactory() call. 
+     * To override the default property location, this method must be called before
+     * the first ClassifierFactory.getFactory() call.
      */
     public static void setDataProp(String properties, boolean relative) {
         dataProp = properties.trim();
@@ -88,19 +88,9 @@ public class ClassifierFactory {
         relativePath = relative;
     }
 
-    /**
-     *  XXXX this needs to be removed once we modified myRDP to take a gene for classifier
-     * @return
-     * @throws IOException
-     * @throws TrainingDataException
-     */
-    public synchronized static ClassifierFactory getFactory() throws IOException, TrainingDataException {
-        return getFactory(RRNA_16S_GENE);
-    }
-
     /** Returns a factory with the training information.
      * This method initialize all the training information.
-     * Note: the ClassifierFactory.setDataProp() static method must be called before  
+     * Note: the ClassifierFactory.setDataProp() static method must be called before
      * this method if default property file will not be used.
      */
     public synchronized static ClassifierFactory getFactory(String gene) throws IOException, TrainingDataException {
@@ -114,7 +104,7 @@ public class ClassifierFactory {
                 factory.trainingInfo.createGenusWordProbList(in);
 
                 // the tree information has to be read after at least one of the other
-                //three files because we need to set the version information.	           
+                //three files because we need to set the version information.
                 in = new InputStreamReader(ClassifierFactory.class.getResourceAsStream(dataDir + gene + "/" + convert("bergeyTree")));
                 factory.trainingInfo.createTree(in);
 

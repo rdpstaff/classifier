@@ -33,10 +33,14 @@ public class ClassificationResultFormatter {
 
     public enum FORMAT {
 
-        allRank, fixRank, dbformat;
+        allRank, fixRank, dbformat, filterbyconf;
     }
 
-    public static String getOutput(ClassificationResult result, FORMAT format) {
+    public static String getOutput(ClassificationResult result, FORMAT format){
+        return getOutput(result, format, 0f);
+    }
+    
+    public static String getOutput(ClassificationResult result, FORMAT format, float conf) {
         switch (format) {
             case allRank:
                 return getAllRankOutput(result);
@@ -44,6 +48,8 @@ public class ClassificationResultFormatter {
                 return getFixRankOutput(result);
             case dbformat:
                 return getDBOutput(result);
+            case filterbyconf:
+                return getFilterByConfOutput(result, conf);
             default:
                 getAllRankOutput(result);
         }
@@ -113,6 +119,51 @@ public class ClassificationResultFormatter {
         return assignmentStr.toString();
 
     }
+    
+    public static String getFilterByConfOutput(ClassificationResult result, float conf) {
+        return getFilterByConfOutput(RANKS, result, conf);
+    }
+    
+    public static String getFilterByConfOutput(String[] ranks, ClassificationResult result, float conf) {
+        StringBuilder assignmentStr = new StringBuilder();
+
+        HashMap<String, RankAssignment> rankMap = new HashMap<String, RankAssignment>();
+        for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
+            rankMap.put(assignment.getRank(), assignment);
+        }
+        
+        // if the score is missing for the rank, report the conf and name from the lower rank if above the conf
+        // if the lower rank is below the conf, output unclassified node name and the conf from the one above the conf
+        RankAssignment prevAssign = null;
+        for (int i = ranks.length -1; i>=0; i--) {
+            RankAssignment assign = rankMap.get(ranks[i]);
+            if (assign != null) {
+                if ( assign.getConfidence() >= conf){
+                    if ( prevAssign != null && prevAssign.getConfidence() < conf){
+                        assignmentStr.insert(0, "\t" +  "unclassified_" + assign.getName() +"\t" + ranks[i+1] + "\t" + assign.getConfidence());
+                    }
+                    assignmentStr.insert(0, "\t" + assign.getName() +"\t" + assign.getRank() + "\t" + assign.getConfidence());
+                }
+                prevAssign = assign;
+            } else {
+                if ( prevAssign != null && prevAssign.getConfidence() >= conf){
+                    assignmentStr.insert(0, "\t" + prevAssign.getName() +"\t" + ranks[i] + "\t" + prevAssign.getConfidence());
+                }
+            }
+            
+        }
+        if (result.isReverse()) {
+            assignmentStr.insert(0,"-");
+        } else {
+            assignmentStr.insert(0, "");
+        }
+        assignmentStr.insert(0, result.getSequence().getSeqName() + "\t");
+        assignmentStr.append("\n");
+        
+        return assignmentStr.toString();
+
+    }
+
 
     public static String getDBOutput(ClassificationResult result) {
         StringBuilder assignmentStr = new StringBuilder();
