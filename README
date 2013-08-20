@@ -1,7 +1,46 @@
-For training data please download from http://sourceforge.net/projects/rdp-classifier/?source=directory
+
+INTRO
+
+The RDP Classifier is a naive Bayesian classifier which was developed to provide rapid taxonomic placement based on rRNA sequence data. 
+The RDP Classifier can rapidly and accurately classify bacterial and archaeal 16s rRNA sequences, and Fungal LSU sequences. 
+It provides taxonomic assignments from domain to genus, with confidence estimates for each assignment. 
+The RDP Classifier likely can be adapted to additional phylogenetically coherent bacterial taxonomies. 
+
+How to cite Classifier? Wang, Q, G. M. Garrity, J. M. Tiedje, and J. R. Cole. 2007. 
+Naïve Bayesian Classifier for Rapid Assignment of rRNA Sequences into the New Bacterial Taxonomy. Appl Environ Microbiol. 73(16):5261-7.
 
 QUICKSTART
-===========
 
 ant jar
 java -jar dist/classifier.jar
+
+For 16S rRNA training data and Fungal LSU training data please download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
+The project on SourceForge also contains the compiled RDP Classifier preconfigured with training data, along with sample data to re-train Classifier.
+
+
+USAGE
+
+1. classify a single sample
+	It can use either the default trained data or user specified data.
+	[Example command from a terminal]:
+	java -Xmx1g -jar /path/to/classifier.jar 
+
+2. classify multiple samples
+	The MultiClassifier can classifiy multiple files at one time and offers more output choices. 
+	[Example command from a terminal]:
+	java -Xmx1g -jar /path/to/MultiClassifier.jar
+
+3. compare two samples 
+	[Example command from a terminal]:
+	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/comparison/ComparisonCmd	
+
+4. estimate the accuracy of your own training data using leave-one-out testing
+	see sampledata/README for more details.
+	[Example command from a terminal]:
+	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/train/validation/leaveoneout/LeaveOneOutTesterMain
+
+5. re-train the Classifier using your own training data 
+	The format of the raw data can be found in sampledata directory.
+	[Example command from a terminal]:
+	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/train/ClassifierTraineeMaker
+	
