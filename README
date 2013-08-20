@@ -1,10 +1,7 @@
 
 INTRO
 
-The RDP Classifier is a naive Bayesian classifier which was developed to provide rapid taxonomic placement based on rRNA sequence data. 
-The RDP Classifier can rapidly and accurately classify bacterial and archaeal 16s rRNA sequences, and Fungal LSU sequences. 
-It provides taxonomic assignments from domain to genus, with confidence estimates for each assignment. 
-The RDP Classifier likely can be adapted to additional phylogenetically coherent bacterial taxonomies. 
+The RDP Classifier is a naive Bayesian classifier which was developed to provide rapid taxonomic placement based on rRNA sequence data. The RDP Classifier can rapidly and accurately classify bacterial and archaeal 16s rRNA sequences, and Fungal LSU sequences. It provides taxonomic assignments from domain to genus, with confidence estimates for each assignment. The RDP Classifier likely can be adapted to additional phylogenetically coherent bacterial taxonomies. 
 
 How to cite Classifier? Wang, Q, G. M. Garrity, J. M. Tiedje, and J. R. Cole. 2007. 
 Naïve Bayesian Classifier for Rapid Assignment of rRNA Sequences into the New Bacterial Taxonomy. Appl Environ Microbiol. 73(16):5261-7.
@@ -15,32 +12,135 @@ ant jar
 java -jar dist/classifier.jar
 
 For 16S rRNA training data and Fungal LSU training data please download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
-The project on SourceForge also contains the compiled RDP Classifier preconfigured with training data, along with sample data to re-train Classifier.
-
+The project on SourceForge also contains the compiled RDP Classifier preconfigured with training data, along with sample data to re-train Classifier. An extended version of Classifier (MultiClassifier) that can classify multiple samples at one time and provide many useful optionally output files. 
 
 USAGE
 
 1. classify a single sample
 	It can use either the default trained data or user specified data.
+	
+	usage: ClassifierCmd [-f <arg>] [-g <arg>] [-o <arg>] [-q <arg>] [-t <arg>] [-w <arg>]
+ -f,--format <arg>           all tab delimited output format: [allrank|fixrank|filterbyconf|db]. Default is allrank.
+                             allrank: outputs the results for all ranks applied for each sequence: seqname, orientation,
+                             taxon name, rank, conf, ...
+                             fixrank: only outputs the results for fixed ranks in order: domain, phylum, class, order,
+                             family, genus
+                             filterbyconf: only outputs the results for major ranks as in fixrank, results below the
+                             confidence cutoff were bin to a higher rank unclassified_node
+                             db: outputs the seqname, trainset_no, tax_id, conf. This is good for storing in a database
+ -g,--gene <arg>             16srrna|fungallsu, the default training model for 16S rRNA or Fungal LSU genes. This option
+                             will be overwritten by --train_propfile option
+ -o,--outputFile <arg>       output file name for classification assignment
+ -q,--queryFile <arg>        query file contains sequences in one of the following formats: Fasta, Genbank and EMBL
+ -t,--train_propfile <arg>   specify a property file contains the mapping of the training files if it's located outside
+                             of data/classifier/.
+                             Note: the training files and the property file should be in the same directory.
+                             The default property file is set to data/classifier/16srrna/rRNAClassifier.properties.
+ -w,--minWords <arg>         minimum number of words for each bootstrap trial, Default is 1/8 of the words. Minimum is 5
+
 	[Example command from a terminal]:
 	java -Xmx1g -jar /path/to/classifier.jar 
-
+	
 2. classify multiple samples
-	The MultiClassifier can classifiy multiple files at one time and offers more output choices. 
+	The MultiClassifier can classifiy multiple files at one time and offers output choices such as hierarchy assignment count for each taxon. 
+	
+Usage: Main [--gene=][--train_propfile=<file>] [--assign_outfile=<file>] [--hier_outfile=<file>] [--shortseq_outfile=<file>] [--conf=<confidence_cutoff>] [--minWords=<min_words_per_bootstrap>] [--bootstrap_out=<file>] [--format=allrank,fixrank,filterbyconf,db] <sample_fasta_file[,dupCountInfile]>...
+--gene= 16srrna|fungallsu, the default training model for 16S rRNA or Fungal LSU genes. This option will be overwritten by --train_propfile option
+--train_propfile= contains the mapping of the training files.
+   Note: the training files and the property file should be in the same directory.
+   The default property file is set to data/classifier/rRNAClassifier.properties.
+--assign_outfile= specifies the output file containing the assignment details for each sequence. Default is null.
+--hier_outfile= specifies the output file containing the assignment count in the hierarchical format for each taxon. Default is standard output.
+--conf= specifies the assignment confidence cutoff used to determine the assignment count in the hierarchical format. Range [0-1], Default is 0.8.
+--minWords= specifies the minimum number of words for each bootstrap trial. Default is 1/8 of the words. Minimum is 5
+--bootstrap_out= specifies the output file containing the number of matching assignments out of 100 bootstraps for major ranks. Default is null.
+--format= specifies the output format. Default is allRank. only allRank, fixRank, filterbyconf and db allowed
+  fixrank only outputs the results for major ranks: root, domain,phylum,class,order,family,genus
+  filterbyconf only outputs the results for major ranks as in fixrank, results below the confidence cutoff were bin to a higher rank unclassified_node
+  db outputs the seqname, trainset_no, tax_id, conf. This is good for storing in a database
+--shortseq_outfile= specifies the output file containing the sequence names that are too short to be classified
+ dupCountInfile specifies the input file containing the duplicate sequence count mapping. Default is null.
+  ex dupCountInfile is order_no tab seqname1,seqname2,..., where seqname1 is the the id used in the input file
+
 	[Example command from a terminal]:
 	java -Xmx1g -jar /path/to/MultiClassifier.jar
 
 3. compare two samples 
+ This command combines classification with a statistical test to flag taxa differing significantly between libraries. 
+ 
+usage: ComparisonCmd [-f <arg>] [-g <arg>] [-n <arg>] [-o <arg>] [-q1 <arg>] [-q2 <arg>] [-r <arg>] [-t <arg>]
+ -f,--format <arg>               tab delimited output format: [ allrank | fixrank | db ]. Default is allrank.
+                                 allrank: outputs the results for all ranks applied for each sequence: seqname,
+                                 orientation, taxon name, rank, conf, ...
+                                 fixrank: only outputs the results for fixed ranks in order: no rank, domain, phylum,
+                                 class, order, family, genus.
+                                 db: outputs the seqname, trainset_no, tax_id, conf. Good for storing in a database.
+ -g,--gene <arg>                 16srrna|fungallsu, the default training model for 16S rRNA or Fungal LSU genes. This
+                                 option will be overwritten by --train_propfile option
+ -n,--conf <arg>                 specifies the assignment confidence cutoff used to determine the assignment count in
+                                 the hierarchical format. Range [0-1], Default is 0.8.
+ -o,--compare_outputFile <arg>   output file name for the comparsion results.
+ -q1,--queryFile1 <arg>          query file contains sequences in one of the following formats: Fasta, Genbank and EMBL.
+ -q2,--queryFile2 <arg>          query file contains sequences in one of the following formats: Fasta, Genbank and EMBL.
+ -r,--class_outputFile <arg>     output file name for classification assignments.
+ -t,--train_propfile <arg>       specify a property file contains the mapping of the training files if it's located
+                                 outside of data/classifier/.
+                                 Note: the training files and the property file should be in the same directory.
+                                 The default property file is set to data/classifier/16srrna/rRNAClassifier.properties.
+                                 
 	[Example command from a terminal]:
 	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/comparison/ComparisonCmd	
 
 4. estimate the accuracy of your own training data using leave-one-out testing
-	see sampledata/README for more details.
+	see sampledata/README on SourceForge for more details about the requirement for making your own training data.
+	
+	usage: LeaveOneOutTesterMain [-l <arg>] [-o <arg>] [-q <arg>] [-s <arg>] [-t <arg>] [-w <arg>]
+ -l,--length <arg>           the default is to test the entire query sequence. if specifiy a length, a region of the
+                             query sequence with the specified length will be random choosen for testing
+ -o,--outputFile <arg>       stat of leave-one-out testing including correctness rate at each rank, misclassified rate
+                             for each taxon
+ -q,--queryFile <arg>        query file contains sequences same format as the training sequence file
+ -s,--trainSeqFile <arg>     training files in fasta format labelled with the lineage information.
+                             The header of this fasta file starts with '>', followed by the sequence name, white
+                             space(s) and a list taxon names seperated by ';' with highest rank taxon first
+                             ex:
+                             Root;Bacteria;Proteobacteria;Gammaproteobacteria;Enterobacteriales;Enterobacteriaceae;Enter
+                             obacter
+ -t,--trainTaxonFile <arg>   contains the hierarchical taxonomy information, taxon name and rank together is unique.
+                             The format looks like the following: taxid*taxon name*parent taxid*depth*rank Note taxid,
+                             the parent taxid and depth should be in integer format. depth indicates the depth from the
+                             root taxon.
+ -w,--minWords <arg>         minimum number of words for each run of bootstrap, minium is 5
+ 
 	[Example command from a terminal]:
 	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/train/validation/leaveoneout/LeaveOneOutTesterMain
 
 5. re-train the Classifier using your own training data 
-	The format of the raw data can be found in sampledata directory.
+	see sampledata/README on SourceForge for more details about the requirement for making your own training data.
+	
+	Usage: java ClassifierTraineeMaker <tax_file> <rawseq.fa> <trainsetNo> <version> <version_modification> <output_directory>
+This program will create 4 output training files to be used by the classifier: 
+	bergeyTrainingTree.xml, genus_wordConditionalProbList.txt, logWordPrior.txt and wordConditionalProbIndexArr.txt
+Command line arguments:
+--tax_file contains the hierarchical taxonomy information in the following format:
+	taxid*taxon name*parent taxid*depth*rank
+	Fields taxid, the parent taxid and depth should be in integer format
+	depth indicates the depth from the root taxon.
+	Note: the depth for the root is 0
+	EX: 44*ROOT*1*0*domain
+--rawseq.fa contains the raw training sequences in fasta format
+	The header of this fasta file starts with ">", 
+	followed by the sequence name, white space(s) 
+	and a list taxon names seperated by ';' with highest rank taxon first.
+	Ex: >seq1     ROOT;Ph1;Fam1;G1
+	Note: a sequence can only be assigned to the lowest rank taxon.
+--trainsetNo is a integer. It's used to marked the training information.
+--version indicates the version of the hierarchical taxonomy
+	Ex: Bacteria Nomenclature
+--version_modification holds the modifcation information of the taxonomy if any
+	Ex: Acidobacterium Added
+--output_directory specifies the output directory.
+
 	[Example command from a terminal]:
 	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/train/ClassifierTraineeMaker
 	
