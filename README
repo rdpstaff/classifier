@@ -12,7 +12,7 @@ ant jar
 java -jar dist/classifier.jar
 
 For 16S rRNA training data and Fungal LSU training data please download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
-The project on SourceForge also contains the compiled RDP Classifier preconfigured with training data, along with sample data to re-train Classifier. An extended version of Classifier (MultiClassifier) that can classify multiple samples at one time and provide many useful optionally output files. 
+The project on SourceForge also contains the compiled RDP Classifier preconfigured with training data, an extended version of Classifier (MultiClassifier) that can classify multiple samples at one time, along with sample data and instructions to re-train Classifier.
 
 USAGE
 
