@@ -212,7 +212,7 @@ public class Main {
             }
         }catch (Exception e) {
             System.out.println("Command Error: " + e.getMessage());
-            new HelpFormatter().printHelp(120, " [options] <samplefile>[,idmappingfile] ...", "", options, "");
+            new HelpFormatter().printHelp(90, " [options] <samplefile>[,idmappingfile] ...", "", options, "");
             return;
         }
                  

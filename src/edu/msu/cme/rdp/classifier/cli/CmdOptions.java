@@ -59,20 +59,19 @@ public class CmdOptions {
     
     // description of the options
     public static final String QUERYFILE_DESC = "legacy option, no longer needed ";
-    public static final String OUTFILE_DESC = "tab-delimited output file for classification assignment. This is required.";
+    public static final String OUTFILE_DESC = "tab-delimited text output file for classification assignment.";
     public static final String TRAINPROPFILE_DESC = "property file containing the mapping of the training files if not using the default."
-            + "\nNote: the training files and the property file should be in the same directory."
-            + "\nThe default property file is set to data/classifier/" + ClassifierFactory.RRNA_16S_GENE + "/rRNAClassifier.properties.";
-    public static final String FORMAT_DESC = "all tab-delimited output format: [allrank|fixrank|filterbyconf|db]. Default is " + DEFAULT_FORMAT + "."
+            + " Note: the training files and the property file should be in the same directory.";
+    public static final String FORMAT_DESC = "tab-delimited output format: [allrank|fixrank|filterbyconf|db]. Default is " + DEFAULT_FORMAT + "."
             + "\n allrank: outputs the results for all ranks applied for each sequence: seqname, orientation, taxon name, rank, conf, ..."
             + "\n fixrank: only outputs the results for fixed ranks in order: domain, phylum, class, order, family, genus"
             + "\n filterbyconf: only outputs the results for major ranks as in fixrank, results below the confidence cutoff were bin to a higher rank unclassified_node"
-            + "\n db: outputs the seqname, trainset_no, tax_id, conf. This is good for storing in a database";
+            + "\n db: outputs the seqname, trainset_no, tax_id, conf.";
     public static final String GENE_DESC = ClassifierFactory.RRNA_16S_GENE + " or " + ClassifierFactory.FUNGALLSU_GENE
             + ", the default gene is " + DEFAULT_GENE +  ". This option will be overwritten by --train_propfile option";
-    public static final String MIN_WORDS_DESC = "minimum number of words for each bootstrap trial. Default is 1/8 of the words of each sequence (also the maximum). Minimum is " + Classifier.MIN_BOOTSTRSP_WORDS ;
+    public static final String MIN_WORDS_DESC = "minimum number of words for each bootstrap trial. Default(maximum) is 1/8 of the words of each sequence. Minimum is " + Classifier.MIN_BOOTSTRSP_WORDS ;
     public static final String HIER_OUTFILE_DESC = "tab-delimited output file containing the assignment count for each taxon in the hierarchical format. Default is null.";
-    public static final String BOOTSTRAP_DESC = "assignment confidence cutoff used to determine the assignment count in the hierarchical format. Range [0-1], Default is " + DEFAULT_CONF + ".";
+    public static final String BOOTSTRAP_DESC = "assignment confidence cutoff used to determine the assignment count for each taxon. Range [0-1], Default is " + DEFAULT_CONF + ".";
   
 
 }
