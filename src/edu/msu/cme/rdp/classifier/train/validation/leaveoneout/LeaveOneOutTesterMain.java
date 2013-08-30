@@ -12,6 +12,7 @@ package edu.msu.cme.rdp.classifier.train.validation.leaveoneout;
 /**
  * This is the Main class to do leave-one-out testing
  */
+import edu.msu.cme.rdp.classifier.cli.CmdOptions;
 import java.io.*;
 
 import org.apache.commons.cli.CommandLine;
@@ -35,14 +36,12 @@ public class LeaveOneOutTesterMain {
     public static final String TRAIN_SEQFILE_LONG_OPT = "trainSeqFile";
     public static final String TRAIN_TAXONFILE_LONG_OPT = "trainTaxonFile";
     public static final String LENGTH_LONG_OPT = "length";
-    public static final String MIN_BOOTSTRAP_WORDS_LONG_OPT = "minWords";
     //short options
     public static final String QUERYFILE_SHORT_OPT = "q";
     public static final String OUTFILE_SHORT_OPT = "o";
     public static final String TRAIN_SEQFILE_SHORT_OPT = "s";
     public static final String TRAIN_TAXONFILE_SHORT_OPT = "t";
     public static final String LENGTH_SHORT_OPT = "l";
-    public static final String MIN_BOOTSTRAP_WORDS_SHORT_OPT = "w";
     
     
     // description of the options
@@ -54,9 +53,8 @@ public class LeaveOneOutTesterMain {
             + " Note taxid, the parent taxid and depth should be in integer format. depth indicates the depth from the root taxon.";
     public static final String LENGTH_DESC = "the default is to test the entire query sequence. "
             + "if specifiy a length, a region of the query sequence with the specified length will be random choosen for testing";
-    public static final String QUERYFILE_DESC = "query file contains sequences same format as the training sequence file";
+    public static final String QUERYFILE_DESC = "query file contains sequences, same format as the training sequence file";
     public static final String OUTFILE_DESC = "stat of leave-one-out testing including correctness rate at each rank, misclassified rate for each taxon ";
-    public static final String MIN_WORDS_DESC = "minimum number of words for each run of bootstrap, minium is " + NBClassifier.MIN_BOOTSTRSP_WORDS ;
     
     static {
         options.addOption(new Option(TRAIN_SEQFILE_SHORT_OPT, TRAIN_SEQFILE_LONG_OPT, true, TRAIN_SEQFILE_DESC));
@@ -64,7 +62,7 @@ public class LeaveOneOutTesterMain {
         options.addOption(new Option(QUERYFILE_SHORT_OPT, QUERYFILE_LONG_OPT, true, QUERYFILE_DESC));
         options.addOption(new Option(OUTFILE_SHORT_OPT, OUTFILE_LONG_OPT, true, OUTFILE_DESC));
         options.addOption(new Option(LENGTH_SHORT_OPT, LENGTH_LONG_OPT, true, LENGTH_DESC));
-        options.addOption(new Option(MIN_BOOTSTRAP_WORDS_SHORT_OPT, MIN_BOOTSTRAP_WORDS_LONG_OPT, true, MIN_WORDS_DESC));
+        options.addOption(new Option(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT, CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT, true, CmdOptions.MIN_WORDS_DESC));
     }
     TreeFactory factory = null;
     BufferedWriter outWriter = null;
@@ -156,10 +154,10 @@ public class LeaveOneOutTesterMain {
                     throw new IllegalArgumentException(length + " must be a positive number ");
                 }
             }
-            if (line.hasOption(MIN_BOOTSTRAP_WORDS_SHORT_OPT)) {
-                min_bootstrap_words = Integer.parseInt(line.getOptionValue(MIN_BOOTSTRAP_WORDS_SHORT_OPT));
+            if (line.hasOption(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT)) {
+                min_bootstrap_words = Integer.parseInt(line.getOptionValue(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT));
                 if (min_bootstrap_words < NBClassifier.MIN_BOOTSTRSP_WORDS) {
-                    throw new IllegalArgumentException(MIN_BOOTSTRAP_WORDS_LONG_OPT + " must be at least " + NBClassifier.MIN_BOOTSTRSP_WORDS);
+                    throw new IllegalArgumentException(CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT + " must be at least " + NBClassifier.MIN_BOOTSTRSP_WORDS);
                 }                
             }
         } catch (Exception e) {

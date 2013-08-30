@@ -33,7 +33,7 @@ public class StatusCountUtils {
       **/
     public static String calROCMatrix(String label, ArrayList<HashMap<String, StatusCount>> statusCountList){
         StringBuilder matrix = new StringBuilder();
-        matrix.append("label\t" + label+"\n");
+        matrix.append("min_bootstrap_words\t" + label+"\n");
         matrix.append("bootstrap");
         HashMap<String, StatusCount> statusCountMap = statusCountList.get(0);
         for ( String rank: statusCountMap.keySet()){
@@ -72,7 +72,7 @@ public class StatusCountUtils {
             matrix.append("\t" + rank );
         }
         matrix.append("\n");
-        matrix.append("label_" + label);
+        matrix.append("min_bootstrap_words_" + label);
          
         for ( String rank: statusCountMap.keySet()){
             if ( rank.startsWith("sub")) continue;

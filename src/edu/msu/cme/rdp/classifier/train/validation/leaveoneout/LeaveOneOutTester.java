@@ -129,12 +129,15 @@ public class LeaveOneOutTester {
 
         displayClassification(resultList);
         //
-        outFile.write("\nRank" + "\t" + "Name" + "\t" + "Total Seqs" + "\t" + "Tested Seqs (non-singleton)" + "\t" + "misClassified" +"\t" + "pct misclassified"+ "\n");
+        outFile.write("\n**misclassified sequences group by taxon\n");
+        outFile.write("Rank" + "\t" + "Name" + "\t" + "Total Seqs" + "\t" + "Tested Seqs (non-singleton)" + "\t" + "misclassified" +"\t" + "pct misclassified"+ "\n");
 
         displayTreeErrorRate(root, 0);
         
-        System.err.println( StatusCountUtils.calROCMatrix(Integer.toString(min_bootstrap_words), statusCountList));
-        System.err.println( StatusCountUtils.calAUC(Integer.toString(min_bootstrap_words), statusCountList));
+        outFile.write("\n**ROC matrix\n");
+        outFile.write( StatusCountUtils.calROCMatrix(Integer.toString(min_bootstrap_words), statusCountList));
+        outFile.write("\n**Area under curve\n");
+        outFile.write( StatusCountUtils.calAUC(Integer.toString(min_bootstrap_words), statusCountList));
 
         outFile.close();
         return statusCountList;
@@ -244,7 +247,7 @@ public class LeaveOneOutTester {
 
         }
 
-        outFile.write("\n missclassified sequences: \n");
+        outFile.write("\n**misclassified sequences: \n");
         for (i = 0; i < seqs.size(); i++) {
             ValidClassificationResultFacade resultFacade = (ValidClassificationResultFacade) seqs.get(i);
             if (resultFacade.isMissed()) {
@@ -253,7 +256,7 @@ public class LeaveOneOutTester {
             }
         }
         
-        outFile.write("\n singleton sequences: \n");
+        outFile.write("\n**singleton sequences: \n");
         for (i = 0; i < seqs.size(); i++) {
             ValidClassificationResultFacade resultFacade = (ValidClassificationResultFacade) seqs.get(i);
             if (resultFacade.getLabeledNode().isSingleton()) {

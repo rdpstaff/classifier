@@ -15,6 +15,7 @@ import edu.msu.cme.rdp.classifier.Classifier;
 import edu.msu.cme.rdp.classifier.RankAssignment;
 import edu.msu.cme.rdp.classifier.ShortSequenceException;
 import edu.msu.cme.rdp.classifier.TrainingDataException;
+import edu.msu.cme.rdp.classifier.cli.CmdOptions;
 import edu.msu.cme.rdp.classifier.io.ClassificationResultFormatter;
 import edu.msu.cme.rdp.classifier.utils.ClassifierFactory;
 import edu.msu.cme.rdp.readseq.readers.Sequence;
@@ -36,53 +37,32 @@ public class ComparisonCmd {
     // long options
     public static final String QUERYFILE1_LONG_OPT = "queryFile1";
     public static final String QUERYFILE2_LONG_OPT = "queryFile2";
-    public static final String CLASS_OUTFILE_LONG_OPT = "class_outputFile";
     public static final String COMPARE_OUTFILE_LONG_OPT = "compare_outputFile";
-    public static final String TRAINPROPFILE_LONG_OPT = "train_propfile";
-    public static final String FORMAT_LONG_OPT = "format";
-    public static final String CONF_LONG_OPT = "conf";
-    public static final String GENE_LONG_OPT = "gene";   // specify the gene if not provide train_propfile
+
     //short options
     public static final String QUERYFILE1_SHORT_OPT = "q1";
     public static final String QUERYFILE2_SHORT_OPT = "q2";
-    public static final String CLASS_OUTFILE_SHORT_OPT = "r";
     public static final String COMPARE_OUTFILE_SHORT_OPT = "o";
-    public static final String TRAINPROPFILE_SHORT_OPT = "t";
-    public static final String FORMAT_SHORT_OPT = "f";
-    public static final String CONF_SHORT_OPT = "n";
-    public static final String GENE_SHORT_OPT = "g";
+
     // description of the options
     public static final String QUERYFILE_DESC = "query file contains sequences in one of the following formats: Fasta, Genbank and EMBL.";
-    public static final String CLASS_OUTFILE_DESC = "output file name for classification assignments.";
     public static final String COMPARE_OUTFILE_DESC = "output file name for the comparsion results.";
-    public static final String TRAINPROPFILE_DESC = "specify a property file contains the mapping of the training files"
-            + " if it's located outside of data/classifier/."
-            + "\nNote: the training files and the property file should be in the same directory."
-            + "\nThe default property file is set to data/classifier/" + ClassifierFactory.RRNA_16S_GENE + "/rRNAClassifier.properties.";
-    public static final String FORMAT_DESC = "tab delimited output format: [ allrank | fixrank | db ]. Default is allrank. "
-            + "\n allrank: outputs the results for all ranks applied for each sequence: seqname, orientation, taxon name, rank, conf, ..."
-            + "\n fixrank: only outputs the results for fixed ranks in order: no rank, domain, phylum, class, order, family, genus."
-            + "\n db: outputs the seqname, trainset_no, tax_id, conf. Good for storing in a database.";
-    public static final String CONF_DESC = "specifies the assignment confidence cutoff used to determine the assignment count in the hierarchical format. Range [0-1], Default is 0.8.";
-    public static final String GENE_DESC = ClassifierFactory.RRNA_16S_GENE + "|" + ClassifierFactory.FUNGALLSU_GENE
-            + ", the default training model for 16S rRNA or Fungal LSU genes. This option will be overwritten by --train_propfile option";
-    public static final float DEFAULT_CON_CUTOFF = 0.8f;  // default
-    public static final ClassificationResultFormatter.FORMAT DEFAULT_FORMAT = ClassificationResultFormatter.FORMAT.allRank;
+    
     private static Options options = new Options();
     private ClassifierFactory factory;
-    private float confidenceCutoff = 0.8f;  // default
+    private float confidenceCutoff = CmdOptions.DEFAULT_CONF;  // default
     private static final String SAMPLE1 = "sample1";
     private static final String SAMPLE2 = "sample2";
 
     static {
         options.addOption(new Option(QUERYFILE1_SHORT_OPT, QUERYFILE1_LONG_OPT, true, QUERYFILE_DESC));
         options.addOption(new Option(QUERYFILE2_SHORT_OPT, QUERYFILE2_LONG_OPT, true, QUERYFILE_DESC));
-        options.addOption(new Option(CLASS_OUTFILE_SHORT_OPT, CLASS_OUTFILE_LONG_OPT, true, CLASS_OUTFILE_DESC));
+        options.addOption(new Option(CmdOptions.OUTFILE_SHORT_OPT, CmdOptions.OUTFILE_LONG_OPT, true, CmdOptions.OUTFILE_DESC));
         options.addOption(new Option(COMPARE_OUTFILE_SHORT_OPT, COMPARE_OUTFILE_LONG_OPT, true, COMPARE_OUTFILE_DESC));
-        options.addOption(new Option(TRAINPROPFILE_SHORT_OPT, TRAINPROPFILE_LONG_OPT, true, TRAINPROPFILE_DESC));
-        options.addOption(new Option(FORMAT_SHORT_OPT, FORMAT_LONG_OPT, true, FORMAT_DESC));
-        options.addOption(new Option(CONF_SHORT_OPT, CONF_LONG_OPT, true, CONF_DESC));
-        options.addOption(new Option(GENE_SHORT_OPT, GENE_LONG_OPT, true, GENE_DESC));
+        options.addOption(new Option(CmdOptions.TRAINPROPFILE_SHORT_OPT, CmdOptions.TRAINPROPFILE_LONG_OPT, true, CmdOptions.TRAINPROPFILE_DESC));
+        options.addOption(new Option(CmdOptions.FORMAT_SHORT_OPT, CmdOptions.FORMAT_LONG_OPT, true, CmdOptions.FORMAT_DESC));
+        options.addOption(new Option(CmdOptions.BOOTSTRAP_SHORT_OPT, CmdOptions.BOOTSTRAP_LONG_OPT, true, CmdOptions.BOOTSTRAP_DESC));
+        options.addOption(new Option(CmdOptions.GENE_SHORT_OPT, CmdOptions.GENE_LONG_OPT, true, CmdOptions.GENE_DESC));
     }
 
     /** Creates a new Manager*/
@@ -255,8 +235,8 @@ public class ComparisonCmd {
         String class_outputFile = null;
         String compare_outputFile = null;
         String propFile = null;
-        ClassificationResultFormatter.FORMAT format = ComparisonCmd.DEFAULT_FORMAT;
-        float conf_cutoff = ComparisonCmd.DEFAULT_CON_CUTOFF;
+        ClassificationResultFormatter.FORMAT format = CmdOptions.DEFAULT_FORMAT;
+        float conf_cutoff = CmdOptions.DEFAULT_CONF;
         String gene = null;
 
         try {
@@ -273,8 +253,8 @@ public class ComparisonCmd {
                 throw new Exception("queryFile2 must be specified");
             }
 
-            if (line.hasOption(CLASS_OUTFILE_SHORT_OPT)) {
-                class_outputFile = line.getOptionValue(CLASS_OUTFILE_SHORT_OPT);
+            if (line.hasOption(CmdOptions.OUTFILE_SHORT_OPT)) {
+                class_outputFile = line.getOptionValue(CmdOptions.OUTFILE_SHORT_OPT);
             } else {
                 throw new Exception("outputFile for classification results must be specified");
             }
@@ -285,33 +265,36 @@ public class ComparisonCmd {
                 throw new Exception("outputFile for comparsion results must be specified");
             }
 
-            if (line.hasOption(TRAINPROPFILE_SHORT_OPT)) {
+            if (line.hasOption(CmdOptions.TRAINPROPFILE_SHORT_OPT)) {
                 if (gene != null) {
                     throw new IllegalArgumentException("Already specified the gene from the default location. Can not specify train_propfile");
                 } else {
-                    propFile = line.getOptionValue(TRAINPROPFILE_SHORT_OPT);
+                    propFile = line.getOptionValue(CmdOptions.TRAINPROPFILE_SHORT_OPT);
                 }
             }
-            if (line.hasOption(CONF_SHORT_OPT)) {
-                conf_cutoff = Float.parseFloat(line.getOptionValue(CONF_SHORT_OPT));
+            if (line.hasOption(CmdOptions.BOOTSTRAP_SHORT_OPT)) {
+                conf_cutoff = Float.parseFloat(line.getOptionValue(CmdOptions.BOOTSTRAP_SHORT_OPT));
             }
-            if (line.hasOption(FORMAT_SHORT_OPT)) {
-                String f = line.getOptionValue(FORMAT_SHORT_OPT);
-                if (f.equals("allrank")) {
+            if (line.hasOption(CmdOptions.FORMAT_SHORT_OPT)) {
+                String f = line.getOptionValue(CmdOptions.FORMAT_SHORT_OPT);
+                if (f.equalsIgnoreCase("allrank")) {
                     format = ClassificationResultFormatter.FORMAT.allRank;
-                } else if (f.equals("fixrank")) {
+                } else if (f.equalsIgnoreCase("fixrank")) {
                     format = ClassificationResultFormatter.FORMAT.fixRank;
-                } else if (f.equals("db")) {
+                } else if (f.equalsIgnoreCase("filterbyconf")) {
+                    format = ClassificationResultFormatter.FORMAT.filterbyconf;
+                } else if (f.equalsIgnoreCase("db")) {
                     format = ClassificationResultFormatter.FORMAT.dbformat;
-                } else {
-                    throw new IllegalArgumentException("Not valid output format, only allrank, fixrank and db allowed");
+                }else {
+                    throw new IllegalArgumentException("Not valid output format, only allrank, fixrank, filterbyconf and db allowed");
                 }
+                
             }
-            if (line.hasOption(GENE_SHORT_OPT)) {
+            if (line.hasOption(CmdOptions.GENE_SHORT_OPT)) {
                 if (propFile != null) {
                     throw new IllegalArgumentException("Already specified train_propfile. Can not specify gene any more");
                 }
-                gene = line.getOptionValue(GENE_SHORT_OPT).toLowerCase();
+                gene = line.getOptionValue(CmdOptions.GENE_SHORT_OPT).toLowerCase();
 
                 if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)) {
                     throw new IllegalArgumentException(gene + " is NOT valid, only allows " + ClassifierFactory.RRNA_16S_GENE + " and " + ClassifierFactory.FUNGALLSU_GENE);

@@ -1,48 +1,143 @@
 
 INTRO
 
-The RDP Classifier is a naive Bayesian classifier which was developed to provide rapid taxonomic placement based on rRNA sequence data. The RDP Classifier can rapidly and accurately classify bacterial and archaeal 16s rRNA sequences, and Fungal LSU sequences. It provides taxonomic assignments from domain to genus, with confidence estimates for each assignment. The RDP Classifier likely can be adapted to additional phylogenetically coherent bacterial taxonomies. 
+The RDP Classifier is a naive Bayesian classifier which was developed to provide rapid taxonomic placement based on rRNA sequence data. 
+The RDP Classifier can rapidly and accurately classify bacterial and archaeal 16s rRNA sequences, and Fungal LSU sequences. 
+It provides taxonomic assignments from domain to genus, with confidence estimates for each assignment. 
+The RDP Classifier likely can be adapted to additional phylogenetically coherent bacterial taxonomies. 
+The online version of RDP Classifier can be found at http://rdp.cme.msu.edu/classifier/classifier.jsp.
 
 How to cite Classifier? Wang, Q, G. M. Garrity, J. M. Tiedje, and J. R. Cole. 2007. 
-Naïve Bayesian Classifier for Rapid Assignment of rRNA Sequences into the New Bacterial Taxonomy. Appl Environ Microbiol. 73(16):5261-7.
+Na√Øve Bayesian Classifier for Rapid Assignment of rRNA Sequences into the New Bacterial Taxonomy. Appl Environ Microbiol. 73(16):5261-7.
+
 
 QUICKSTART
 
 ant jar
 java -jar dist/classifier.jar
 
-For 16S rRNA training data and Fungal LSU training data please download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
-The project on SourceForge also contains the compiled RDP Classifier preconfigured with training data, an extended version of Classifier (MultiClassifier) that can classify multiple samples at one time, along with sample data and instructions to re-train Classifier.
+Some commands in this tutorial depend on RDP Clustering. See RDPTools (https://github.com/rdpstaff/RDPTools) to install.
+
+
 
 USAGE
 
-1. classify a single sample
-	It can use either the default trained data or user specified data.
-	
-	[Example command from a terminal]:
-	java -Xmx1g -jar /path/to/classifier.jar 
-	
-2. classify multiple samples
-	The MultiClassifier can classifiy multiple files at one time and offers output choices such as hierarchy assignment count for each taxon. 
+There are many subcommands offered by the Classifier package. The default command is classify.
 
-	[Example command from a terminal]:
-	java -Xmx1g -jar /path/to/MultiClassifier.jar
+java -Xmx1g -jar /path/to/classifier.jar
+USAGE: ClassifierMain <subcommand> <subcommand args ...>
+	classify      - classify one or multiple samples
+	libcompare    - compare two samples
+	merge         - merge multiple classification result files to create a new hier_out file
+	train         - retrain classifier
+	loot          - leave-one-out accuracy testing
+	crossvalidate - cross validate accuracy testing
+	
+	
+1. Classify one or more samples
+  usage:  [options] <samplefile>[,idmappingfile] ...
+ -c,--conf <arg>             assignment confidence cutoff used to determine the assignment count in the hierarchical
+                             format. Range [0-1], Default is 0.8.
+ -f,--format <arg>           all tab delimited output format: [allrank|fixrank|filterbyconf|db]. Default is allrank.
+                             allrank: outputs the results for all ranks applied for each sequence: seqname, orientation,
+                             taxon name, rank, conf, ...
+                             fixrank: only outputs the results for fixed ranks in order: domain, phylum, class, order,
+                             family, genus
+                             filterbyconf: only outputs the results for major ranks as in fixrank, results below the
+                             confidence cutoff were bin to a higher rank unclassified_node
+                             db: outputs the seqname, trainset_no, tax_id, conf. This is good for storing in a database
+ -g,--gene <arg>             16srrna|fungallsu, the default training model for 16S rRNA or Fungal LSU genes. This option
+                             will be overwritten by --train_propfile option
+ -h,--hier_outfile <arg>     output file containing the assignment count for each taxon in the hierarchical format.
+                             Default is null.
+ -o,--outputFile <arg>       output file for classification assignment. This is required.
+ -q,--queryFile              legacy option, no longer needed
+ -t,--train_propfile <arg>   property file containing the mapping of the training files if not using the default.
+                             Note: the training files and the property file should be in the same directory.
+                             The default property file is set to data/classifier/16srrna/rRNAClassifier.properties.
+ -w,--minWords <arg>         minimum number of words for each bootstrap trial, Default is 1/8 of the words of each
+                             sequence. Minimum is 5
+	
+	[Example command to classify sequences ]:
+	java -Xmx1g -jar /path/to/classifier.jar classify -c 0.5 -o usga_classified.txt -h soil_hier.txt samplefiles/USGA_2_4_B_trimmed.fasta
+	
+	To speedup classification when large number of duplicate sequences exist in the inputs, you can dereplicate the input files first and use both the unique sequence fasta and idmapping file as input.
+	The classification assignment output only contains the results of the unique sequences, the assignment counts in the hier_out_file are expanded to reflect the full sets.
+	The hier_outfile can be imported to Excel to make plots, or loaded into R program as a data matrix. 
 
-3. compare two samples 
+	[Example command to classify sequences with idmapping]:
+	java -jar /path/to/Clustering.jar derep -u -o Native_1_4_A_derep.fasta Native_1_4_A.ids Native_1_4_A.sample samplefiles/Native_1_4_A_trimmed.fasta
+	java -Xmx1g -jar /path/to/classifier.jar classify -c 0.5 -o native_classified.txt -h soil_hier.txt Native_1_4_A_derep.fasta,Native_1_4_A.ids
+	java -Xmx1g -jar /path/to/classifier.jar classify -c 0.5 -f fixrank -o soil_classified.txt -h soil_hier.txt Native_1_4_A_derep.fasta,Native_1_4_A.ids samplefiles/USGA_2_4_B_trimmed.fasta
+
+	Notes:
+	The bootstrap assignment strategy has been changed to avoid over-predication problem when multiple genera are tied for highest score occurred during bootstrap trials. This happens when every sequence in multiple genera (say N) contains the same partial sequence. One of the genera will be randomly chosen from the list of N genera with the highest tie score. If the tie score occurred during the genus assignment deterministic step, the first genus will be chosen. In this way, the genus assignment will remain deterministic but the bootstrap score will be close to 1/N .
+
+	By default, the Classifier output the results for all ranks applied for each sequence. Some users found the format "fixrank" useful to load into third party analysis tools. 
+	When "fixrank" is specified, the Classifier outputs the results in a fixed rank order as described above. 
+	In case of missing ranks in the lineage, the bootstrap value and the taxon name from the immediate lower rank will be reported. 
+	This eliminates the gaps in the lineage, but also introduces non-existing taxon name and rank. User should interpret the "fixrank" results with caution.
+
+	By default the Classifier chooses a subset of 1/8 of all the possible overlapping words from the query sequence for each bootstrap trial. 
+	The Classifier uses the minWords if the minWords is larger than 1/8 of words. Choosing more words helps gaining higher bootstrap values for short query sequence. 
+	Using larger "minWords" will increase the run time since the run time is proportional to the number and the length of the query sequences. 
+
+
+2. Compare two samples 
  This command combines classification with a statistical test to flag taxa differing significantly between libraries. 
                                  
 	[Example command from a terminal]:
-	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/comparison/ComparisonCmd	
+	java -Xmx1g -jar /path/to/classifier.jar libcompare -q1 samplefiles/Native_1_4_A_trimmed.fasta -q2 samplefiles/USGA_2_4_B_trimmed.fasta -c 0.5 -o libcompare.txt
 
-4. estimate the accuracy of your own training data using leave-one-out testing
-	see sampledata/README on SourceForge for more details about the requirement for making your own training data.
+
+3. Merge classification results
+	If you have classified samples at different time using the same training set, you can use this command to merge the classification results and 
+	reproduce the hier_outfile with the assignment counts from all the samples from the input. Each input classification result is treated as one sample.
+	Note taxon and rank filter options only affect the assignment output, not the hier_outfile.
+	
+	[Example command to merge two classification results]:
+	java -Xmx1g -jar /path/to/classifier.jar merge -h soil_hier.txt -o merged_classified.txt native_classified.txt,Native_1_4_A.ids usga_classified.txt
+	
+	[Example command to merge two classification results, filter the classification output by confidence ]:
+	java -Xmx1g -jar /path/to/classifier.jar merge -h soil_hier.txt -o merged_classified.txt -f filterbyconf -c 0.5 native_classified.txt,Native_1_4_A.ids usga_classified.txt 
+
+	[Example command to merge two classification results, only output classification results assigned to Alphaproteobacteria and confidence at family >= 0.5 ]:
+	create a file taxonFilter.txt containing Alphaproteobacteria.
+	java -Xmx1g -jar /path/to/classifier.jar merge -h soil_hier.txt -o merged_classified.txt -n taxonFilter.txt -c 0.5 -r family native_classified.txt,Native_1_4_A.ids usga_classified.txt 
+
+
+4. Retrain the Classifier
+	a. Follow these steps when there is a need to retrain Classifier, such as novel lineages, newly named type organisms, taxonomic rearrangements, 
+	better training set covering specific taxa, or alternative taxonomy. Two files, a taxonomy file and a training sequence file with lineage are required.
+	See samplefiles for example data files.
+	The 16S rRNA training data and Fungal LSU training data can be download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
+	Based on our experience, trimming the sequences to a specific region does not improve accuracy. The ranks are required to be uniform either, 
+	which means you can define any number of ranks as necessary. 
+	The speed of the Classifier is proportional to the number of genera, not the number of training sequences.
+	
+	b. Estimate the accuracy of your own training data using leave-one-out testing
+	The program will output a tab-delimited test result file which can be loaded to Excel
+	and plot the accuracy rates (see samplefiles/leave_one_out_accuracy.xlsx with testing results from various length).
+	It also contains the list of misclassified sequences and the rank when misclassified seqs group by taxon. Examine the result careful to spot errors in the taxonomy.
  
-	[Example command from a terminal]:
-	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/train/validation/leaveoneout/LeaveOneOutTesterMain
-
-5. re-train the Classifier using your own training data 
-	see sampledata/README on SourceForge for more details about the requirement for making your own training data.
-
-	[Example command from a terminal]:
-	java -Xmx1g -cp /path/to/classifier.jar edu/msu/cme/rdp/classifier/train/ClassifierTraineeMaker
+	[Example command to do leave-one_out testing with length of 400]:
+	java -Xmx1g -jar /path/to/classifier.jar loot -q samplefiles/Armatimonadetes.fasta -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400 -o Armatimonadetes_400_test.txt 
+	
+	c. Cross validate testing
+	This comand performs a random sub-sampling validation. It calculate the values of (1-specificity) and sensitivity for each rank at each bootstrap cutoff.
+	
+	[Example command to do cross validation testing with length of 400]:	
+	java -Xmx1g -jar /path/to/classifier.jar crossvalidate -o crossvalidate_400.txt -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400
+	
+	d. Train classifer  
+	If you are satisfied with the testing results, go ahead to train the classifier.
+	
+	[Example command to train classifier]:
+	java -Xmx1g -jar /path/to/classifier.jar train -o mytrained -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt
+	cp samplefiles/rRNAClassifier.properties mytrained/
+	
+	e. Classify sequences using the new model
+	
+	[Example command to classify with the new model using "-t" option]:
+	java -Xmx1g -jar /path/to/classifier.jar classify -t mytrained/rRNAClassifier.properties -o Armatimonadetes_classified.txt samplefiles/Armatimonadetes.fasta 
 	

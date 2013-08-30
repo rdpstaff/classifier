@@ -8,7 +8,18 @@
  */
 package edu.msu.cme.rdp.classifier.train;
 
+import edu.msu.cme.rdp.classifier.cli.CmdOptions;
+import static edu.msu.cme.rdp.classifier.comparison.ComparisonCmd.COMPARE_OUTFILE_SHORT_OPT;
+import static edu.msu.cme.rdp.classifier.comparison.ComparisonCmd.QUERYFILE1_SHORT_OPT;
+import static edu.msu.cme.rdp.classifier.comparison.ComparisonCmd.QUERYFILE2_SHORT_OPT;
+import edu.msu.cme.rdp.classifier.io.ClassificationResultFormatter;
+import edu.msu.cme.rdp.classifier.utils.ClassifierFactory;
 import java.io.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 
 /**
  * A command line class to create training information from the raw data.
@@ -16,6 +27,22 @@ import java.io.*;
  * @version 
  */
 public class ClassifierTraineeMaker {
+    private static final Options options = new Options();
+
+    static {
+        options.addOption(new Option("t", "tax_file", true, "contains the hierarchical taxonomy information in the following format:\n" +
+                "taxid*taxon name*parent taxid*depth*rank\nFields taxid, the parent taxid and depth should be in integer format\n" +
+                "The taxid, or the combination of taxon name and rank is unique\n" +
+                "depth indicates the depth from the root taxon.\n Note: the depth for the root is 0"));
+        options.addOption(new Option("s", "seq", true, "training sequences in FASTA format with lineage in the header:\n" +
+                "a list taxon names seperated by ';' with highest rank taxon first.\n" +
+                "The lowest rank of the lineage have to be the same for all sequence.\n" +
+                "The lowest rank is not limited to genus"));
+        options.addOption(new Option("n", "version_no", true, "an integer used to refer to a training set"));
+        options.addOption(new Option("v", "version", true, "the version of the hierarchical taxonomy"));
+        options.addOption(new Option("m", "mod", true, "the modifcation information of the taxonomy"));
+        options.addOption(new Option("o", "out_dir", true, "the output directory"));
+    }
 
     /** Creates a new ClassifierTraineeMaker 
      * @param taxFile contains the hierarchical taxonomy information in the following format:
@@ -46,6 +73,9 @@ public class ClassifierTraineeMaker {
             }
             //after parsing all the sequences in training set, calculates the prior probability for each word
             factory.createGenusWordConditionalProb();
+            if ( !(new File(outdir)).exists()){
+                (new File(outdir)).mkdir();
+            }
             outdir = outdir + File.separator;
             factory.printTrainingFiles(outdir);
             factory.printWordPriors(outdir);
@@ -92,42 +122,52 @@ public class ClassifierTraineeMaker {
      */
     public static void main(String[] args) throws FileNotFoundException,
             IOException {
-        if (args.length != 6) {
-            System.err.println("Usage: java ClassifierTraineeMaker <tax_file> <rawseq.fa> <trainsetNo> <version> <version_modification> <output_directory>");
-            System.err.println("This program will create 4 output training files to be used by the classifier: ");
-            System.err.println("\tbergeyTrainingTree.xml, genus_wordConditionalProbList.txt, logWordPrior.txt and wordConditionalProbIndexArr.txt");
-            System.err.println("Command line arguments:");
-            System.err.println("--tax_file contains the hierarchical taxonomy information in the following format:");
-            System.err.println("\ttaxid*taxon name*parent taxid*depth*rank");
-            System.err.println("\tFields taxid, the parent taxid and depth should be in integer format");
-            System.err.println("\tdepth indicates the depth from the root taxon.");
-            System.err.println("\tNote: the depth for the root is 0");
-            System.err.println("\tEX: 44*ROOT*1*0*domain");
-            System.err.println("--rawseq.fa contains the raw training sequences in fasta format");
-            System.err.println("\tThe header of this fasta file starts with \">\", "
-                    + "\n\tfollowed by the sequence name, white space(s) "
-                    + "\n\tand a list taxon names seperated by ';' with highest rank taxon first.");
-            System.err.println("\tEx: >seq1     ROOT;Ph1;Fam1;G1");
-            System.err.println("\tNote: a sequence can only be assigned to the lowest rank taxon.");
-            System.err.println("--trainsetNo is a integer. It's used to marked the training information.");
-            System.err.println("--version indicates the version of the hierarchical taxonomy");
-            System.err.println("\tEx: Bacteria Nomenclature");
-            System.err.println("--version_modification holds the modifcation information of the taxonomy if any");
-            System.err.println("\tEx: Acidobacterium Added");
-            System.err.println("--output_directory specifies the output directory.");
-
-            System.exit(-1);
-        }
-
+        String taxFile;
+        String seqFile;
         int trainset_no = 1;
+        String version = null;
+        String modification = null;
+        String outdir = null;
+        
         try {
-            trainset_no = Integer.parseInt(args[2]);
-        } catch (NumberFormatException ex) {
-            System.err.println("Error: trainset_no needs to be an integer.");
-            System.exit(-1);
-        }
+            CommandLine line = new PosixParser().parse(options, args);
 
-        printLicense();
-        ClassifierTraineeMaker maker = new ClassifierTraineeMaker(args[0], args[1], trainset_no, args[3], args[4], args[5]);
+            if (line.hasOption("t")) {
+                taxFile = line.getOptionValue("t");
+            } else {
+                throw new Exception("taxon file must be specified");
+            }
+            if (line.hasOption("s")) {
+                seqFile = line.getOptionValue("s");
+            } else {
+                throw new Exception("seq file must be specified");
+            }
+
+            if (line.hasOption("n")) {
+                try {
+                    trainset_no = Integer.parseInt(line.getOptionValue("n"));
+                } catch (NumberFormatException ex) {
+                    throw new IllegalArgumentException("trainset_no needs to be an integer.");
+                }
+            }
+            if (line.hasOption("o")) {
+                outdir = line.getOptionValue("o");
+            } else {
+                throw new Exception("output directory must be specified");
+            }
+            if (line.hasOption("v")) {
+                version = line.getOptionValue("v");
+            }
+            if (line.hasOption("m")) {
+                modification = line.getOptionValue("m");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Command Error: " + e.getMessage());
+            new HelpFormatter().printHelp(120, "train", "", options, "", true);
+            return;
+        }
+        
+        ClassifierTraineeMaker maker = new ClassifierTraineeMaker(taxFile, seqFile, trainset_no, version, modification, outdir);
     }
 }

@@ -27,8 +27,10 @@ import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
 import edu.msu.cme.rdp.classifier.train.validation.HierarchyTree;
 import edu.msu.cme.rdp.classifier.train.validation.Taxonomy;
 import edu.msu.cme.rdp.classifier.train.validation.TreeFactory;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,8 +53,10 @@ import java.util.Set;
      * @param selectedTestSeqIDs
      * @throws IOException
      */
-    public ArrayList<HashMap> runTest(File tax_file, File source_file,
+    public ArrayList<HashMap> runTest(File tax_file, File source_file, File out_file,
             String rdmSelectedRank, float fraction, Integer partialLength, boolean useSeed, int min_bootstrap_words) throws IOException{
+        BufferedWriter outWriter = new BufferedWriter(new FileWriter(out_file));
+        
         Set<String> selectedTestSeqIDs = null;
         if ( rdmSelectedRank == null){
             selectedTestSeqIDs = RdmSelectTaxon.randomSelectSeq(source_file, fraction);
@@ -87,9 +91,11 @@ import java.util.Set;
              }
          }
 
-        int i = 0;
+        int totalTest = 0;
+        int totalSeq = 0;
         LineageSequenceParser parser = new LineageSequenceParser(source_file);
         while ( parser.hasNext()){
+            totalSeq ++;
           LineageSequence pSeq = parser.next();
           if ( !selectedTestSeqIDs.contains(pSeq.getSeqName()) || pSeq.getSeqString().length() == 0){
               continue;
@@ -114,12 +120,29 @@ import java.util.Set;
 
           compareClassificationResult(factory, resultFacade, rankNodeMap, statusCountList);
 
-          //System.out.print(i +" ");
-          i++;
+          totalTest++;
         }
         parser.close();
 
-        calErrorRate(statusCountList);
+        outWriter.write("taxon file\t" + tax_file.getName() + "\n" + "train sequence file\t" + source_file.getName() + "\n");
+        outWriter.write("word size\t" + GoodWordIterator.WORDSIZE + "\n");
+        outWriter.write("minimum number of words for bootstrap\t" + min_bootstrap_words + "\n");
+        if ( partialLength != null){
+            outWriter.write("length\t" + partialLength + "\n");
+        }else {
+            outWriter.write("length\t" +"full"+ "\n");
+        }
+        if ( rdmSelectedRank == null){
+            outWriter.write("selectedRank\t" + "NA"+ "\n");
+        }else {
+            outWriter.write("selectedRank\t" + rdmSelectedRank+ "\n"); 
+        }
+        
+        outWriter.write("trainingset size\t" + (totalSeq - selectedTestSeqIDs.size()) + "\n");
+        outWriter.write("testset size\t" + totalTest + "\n");
+        
+        outWriter.write(calErrorRate(statusCountList));
+        outWriter.close();
         return statusCountList;
 
     }
@@ -141,7 +164,6 @@ import java.util.Set;
             LineageSequence pSeq = parser.next();
             if ( !selectedTestSeqIDs.contains(pSeq.getSeqName())){
               factory.addSequence( pSeq);
-              //System.err.println(">Training " + pSeq.getName()+ "\t" + pSeq.getLineage());
             }
         }
         parser.close();
@@ -222,29 +244,30 @@ import java.util.Set;
       * specificity = #TN / (#TN + #FP)
       * @param statusCountList
       */
-     public void calErrorRate(ArrayList<HashMap> statusCountList){
-        System.err.println("\nbootstrap\t1-Specificity\tSensitivity");
-        System.err.print("bootstrap");
+     public String calErrorRate(ArrayList<HashMap> statusCountList){
+        StringBuilder ret = new StringBuilder();
+        ret.append("\nbootstrap\t1-Specificity\tSensitivity\n");
+        ret.append("bootstrap");
         HashMap<String, StatusCount> statusCountMap = statusCountList.get(0);
         for ( String rank: statusCountMap.keySet()){
             if ( rank.startsWith("sub")) continue;
-            System.err.print("\t" + rank + "1-Specificity" +"\t" + rank );
+            ret.append("\t" + rank + "_Spec" +"\t" + rank + "_Sens" );
         }
-        System.err.println();
+        ret.append("\n");
 
         for( int b = 0; b < statusCountList.size(); b++){
-            System.err.print(b );
+            ret.append(b );
             statusCountMap = statusCountList.get(b);
             for ( String rank: statusCountMap.keySet()){
                 if ( rank.startsWith("sub")) continue;
                 StatusCount st = statusCountMap.get(rank);
                 double se = st.calSensitivity();
                 double sp = st.calSpecificity();
-                System.err.print("\t" + (1-sp) + "\t" + se  );
+                ret.append("\t" + (1-sp) + "\t" + se  );
             }
-            System.err.println();
+            ret.append("\n");
         }
-
+        return ret.toString();
      }
 
 }

@@ -7,6 +7,7 @@
  */
 package edu.msu.cme.rdp.classifier;
 
+import edu.msu.cme.rdp.classifier.cli.CmdOptions;
 import edu.msu.cme.rdp.classifier.io.ClassificationResultFormatter;
 import edu.msu.cme.rdp.classifier.utils.ClassifierFactory;
 import edu.msu.cme.rdp.classifier.utils.ClassifierSequence;
@@ -25,53 +26,21 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 
 /**
- * This is the command line class to do the classification.
+ * This is the legacy command line class to do the classification. See edu.msu.cme.rdp.multicompare.main
  * @author wangqion
  */
 public class ClassifierCmd {
 
     private static final Options options = new Options();
-    // long options
-    public static final String QUERYFILE_LONG_OPT = "queryFile";
-    public static final String OUTFILE_LONG_OPT = "outputFile";
-    public static final String TRAINPROPFILE_LONG_OPT = "train_propfile";
-    public static final String FORMAT_LONG_OPT = "format";
-    public static final String GENE_LONG_OPT = "gene";   // specify the gene if not provide train_propfile
-    public static final String MIN_BOOTSTRAP_WORDS_LONG_OPT = "minWords";
     
-    //short options
-    public static final String QUERYFILE_SHORT_OPT = "q";
-    public static final String OUTFILE_SHORT_OPT = "o";
-    public static final String TRAINPROPFILE_SHORT_OPT = "t";
-    public static final String FORMAT_SHORT_OPT = "f";
-    public static final String GENE_SHORT_OPT = "g";
-    public static final String MIN_BOOTSTRAP_WORDS_SHORT_OPT = "w";
-    
-    // description of the options
-    public static final String QUERYFILE_DESC = "query file contains sequences in one of the following formats: Fasta, Genbank and EMBL";
-    public static final String OUTFILE_DESC = "output file name for classification assignment";
-    public static final String TRAINPROPFILE_DESC = "specify a property file contains the mapping of the training files"
-            + " if it's located outside of data/classifier/."
-            + "\nNote: the training files and the property file should be in the same directory."
-            + "\nThe default property file is set to data/classifier/" + ClassifierFactory.RRNA_16S_GENE + "/rRNAClassifier.properties.";
-    public static final String FORMAT_DESC = "all tab delimited output format: [allrank|fixrank|filterbyconf|db]. Default is allrank. "
-            + "\n allrank: outputs the results for all ranks applied for each sequence: seqname, orientation, taxon name, rank, conf, ..."
-            + "\n fixrank: only outputs the results for fixed ranks in order: domain, phylum, class, order, family, genus"
-            + "\n filterbyconf: only outputs the results for major ranks as in fixrank, results below the confidence cutoff were bin to a higher rank unclassified_node"
-            + "\n db: outputs the seqname, trainset_no, tax_id, conf. This is good for storing in a database";
-    public static final String GENE_DESC = ClassifierFactory.RRNA_16S_GENE + "|" + ClassifierFactory.FUNGALLSU_GENE
-            + ", the default training model for 16S rRNA or Fungal LSU genes. This option will be overwritten by --train_propfile option";
-    public static final String MIN_WORDS_DESC = "minimum number of words for each bootstrap trial, Default is 1/8 of the words. Minimum is " + Classifier.MIN_BOOTSTRSP_WORDS ;
-
-    private ClassificationResultFormatter.FORMAT defaultFormat = ClassificationResultFormatter.FORMAT.allRank;
      
     static {
-        options.addOption(new Option(QUERYFILE_SHORT_OPT, QUERYFILE_LONG_OPT, true, QUERYFILE_DESC));
-        options.addOption(new Option(OUTFILE_SHORT_OPT, OUTFILE_LONG_OPT, true, OUTFILE_DESC));
-        options.addOption(new Option(TRAINPROPFILE_SHORT_OPT, TRAINPROPFILE_LONG_OPT, true, TRAINPROPFILE_DESC));
-        options.addOption(new Option(FORMAT_SHORT_OPT, FORMAT_LONG_OPT, true, FORMAT_DESC));
-        options.addOption(new Option(GENE_SHORT_OPT, GENE_LONG_OPT, true, GENE_DESC));
-        options.addOption(new Option(MIN_BOOTSTRAP_WORDS_SHORT_OPT, MIN_BOOTSTRAP_WORDS_LONG_OPT, true, MIN_WORDS_DESC));
+        options.addOption(new Option(CmdOptions.QUERYFILE_SHORT_OPT, CmdOptions.QUERYFILE_LONG_OPT, false, CmdOptions.QUERYFILE_DESC)); // keep this for compatibility with old interface
+        options.addOption(new Option(CmdOptions.OUTFILE_SHORT_OPT, CmdOptions.OUTFILE_LONG_OPT, true, CmdOptions.OUTFILE_DESC));
+        options.addOption(new Option(CmdOptions.TRAINPROPFILE_SHORT_OPT, CmdOptions.TRAINPROPFILE_LONG_OPT, true, CmdOptions.TRAINPROPFILE_DESC));
+        options.addOption(new Option(CmdOptions.FORMAT_SHORT_OPT, CmdOptions.FORMAT_LONG_OPT, true, CmdOptions.FORMAT_DESC));
+        options.addOption(new Option(CmdOptions.GENE_SHORT_OPT, CmdOptions.GENE_LONG_OPT, true, CmdOptions.GENE_DESC));
+        options.addOption(new Option(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT, CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT, true, CmdOptions.MIN_WORDS_DESC));
     }
    
 
@@ -84,7 +53,7 @@ public class ClassifierCmd {
             ClassifierFactory.setDataProp(propfile, false);
         }
         if (format == null) {
-            format = defaultFormat;
+            format = CmdOptions.DEFAULT_FORMAT;
         }
         ClassifierFactory factory = ClassifierFactory.getFactory(gene);
         Classifier aClassifier = factory.createClassifier();
@@ -155,32 +124,27 @@ public class ClassifierCmd {
         String outputFile = null;
         String propFile = null;
         String gene = null;
-        ClassificationResultFormatter.FORMAT format = null;
+        ClassificationResultFormatter.FORMAT format = CmdOptions.DEFAULT_FORMAT;
         int min_bootstrap_words = Classifier.MIN_BOOTSTRSP_WORDS;
 
         try {
             CommandLine line = new PosixParser().parse(options, args);
-
-            if (line.hasOption(QUERYFILE_SHORT_OPT)) {
-                queryFile = line.getOptionValue(QUERYFILE_SHORT_OPT);
-            } else {
-                throw new Exception("queryFile must be specified");
-            }
-            if (line.hasOption(OUTFILE_SHORT_OPT)) {
-                outputFile = line.getOptionValue(OUTFILE_SHORT_OPT);
+            
+            if (line.hasOption(CmdOptions.OUTFILE_SHORT_OPT)) {
+                outputFile = line.getOptionValue(CmdOptions.OUTFILE_SHORT_OPT);
             } else {
                 throw new Exception("outputFile must be specified");
             }
 
-            if (line.hasOption(TRAINPROPFILE_SHORT_OPT)) {
+            if (line.hasOption(CmdOptions.TRAINPROPFILE_SHORT_OPT)) {
                 if (gene != null) {
                     throw new IllegalArgumentException("Already specified the gene from the default location. Can not specify train_propfile");
                 } else {
-                    propFile = line.getOptionValue(TRAINPROPFILE_SHORT_OPT);
+                    propFile = line.getOptionValue(CmdOptions.TRAINPROPFILE_SHORT_OPT);
                 }
             }
-            if (line.hasOption(FORMAT_SHORT_OPT)) {
-                String f = line.getOptionValue(FORMAT_SHORT_OPT);
+            if (line.hasOption(CmdOptions.FORMAT_SHORT_OPT)) {
+                String f = line.getOptionValue(CmdOptions.FORMAT_SHORT_OPT);
                 if (f.equalsIgnoreCase("allrank")) {
                     format = ClassificationResultFormatter.FORMAT.allRank;
                 } else if (f.equalsIgnoreCase("fixrank")) {
@@ -193,30 +157,38 @@ public class ClassifierCmd {
                     throw new IllegalArgumentException("Not valid output format, only allrank, fixrank, filterbyconf and db allowed");
                 }
             }
-            if (line.hasOption(GENE_SHORT_OPT)) {
+            if (line.hasOption(CmdOptions.GENE_SHORT_OPT)) {
                 if (propFile != null) {
                     throw new IllegalArgumentException("Already specified train_propfile. Can not specify gene any more");
                 }
-                gene = line.getOptionValue(GENE_SHORT_OPT).toLowerCase();
+                gene = line.getOptionValue(CmdOptions.GENE_SHORT_OPT).toLowerCase();
 
                 if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)) {
                     throw new IllegalArgumentException(gene + " is NOT valid, only allows " + ClassifierFactory.RRNA_16S_GENE + " and " + ClassifierFactory.FUNGALLSU_GENE);
                 }
             }
-            if (line.hasOption(MIN_BOOTSTRAP_WORDS_SHORT_OPT)) {
-                min_bootstrap_words = Integer.parseInt(line.getOptionValue(MIN_BOOTSTRAP_WORDS_SHORT_OPT));
+            if (line.hasOption(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT)) {
+                min_bootstrap_words = Integer.parseInt(line.getOptionValue(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT));
                 if (min_bootstrap_words < Classifier.MIN_BOOTSTRSP_WORDS) {
-                    throw new IllegalArgumentException(MIN_BOOTSTRAP_WORDS_LONG_OPT + " must be at least " + Classifier.MIN_BOOTSTRSP_WORDS);
+                    throw new IllegalArgumentException(CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT + " must be at least " + Classifier.MIN_BOOTSTRSP_WORDS);
                 }                
             }
+            
+            args = line.getArgs();
+            if ( args.length != 1){
+                throw new Exception("Expect one query file");
+            }
+            queryFile = args[0];
+            
         } catch (Exception e) {
             System.out.println("Command Error: " + e.getMessage());
-            new HelpFormatter().printHelp(120, "ClassifierCmd", "", options, "", true);
+            new HelpFormatter().printHelp(120, "ClassifierCmd [options] <samplefile>\nNote this is the legacy command for one sample classification ", "", options, "");
+
             return;
         }
 
         if (propFile == null && gene == null) {
-            gene = ClassifierFactory.RRNA_16S_GENE;
+            gene = CmdOptions.DEFAULT_GENE;
         }
         ClassifierCmd classifierCmd = new ClassifierCmd();
 
