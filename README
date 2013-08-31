@@ -103,7 +103,7 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
 
 4. Retrain the Classifier
 	a. Follow these steps when there is a need to retrain Classifier, such as novel lineages, newly named type organisms, taxonomic rearrangements, better training set covering specific taxa, or alternative taxonomy. Two files, a taxonomy file and a training sequence file with lineage are required. See samplefiles for example data files. The 16S rRNA training data and Fungal LSU training data can be download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
-	Based on our experience, trimming the sequences to a specific region does not improve accuracy. The ranks are required to be uniform either, which means you can define any number of ranks as necessary. The speed of the Classifier is proportional to the number of genera, not the number of training sequences.
+	Based on our experience, trimming the sequences to a specific region does not improve accuracy. The ranks are not required to be uniform neither, which means you can define any number of ranks as necessary. The speed of the Classifier is proportional to the number of genera, not the number of training sequences.
 	
 	b. Estimate the accuracy of your own training data using leave-one-out testing
 	The program will output a tab-delimited test result file which can be loaded to Excel and plot the accuracy rates. It also contains the list of misclassified sequences and the rank when misclassified seqs group by taxon. Examine the result careful to spot errors in the taxonomy.
