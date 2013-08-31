@@ -29,32 +29,39 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
 	
 1. Classify one or more samples
   usage:  [options] <samplefile>[,idmappingfile] ...
- -c,--conf <arg>             assignment confidence cutoff used to determine the assignment
-                             count for each taxon. Range [0-1], Default is 0.8.
+ -c,--conf <arg>             assignment confidence cutoff used to determine the
+                             assignment count for each taxon. Range [0-1],
+                             Default is 0.8.
  -f,--format <arg>           tab-delimited output format:
-                             [allrank|fixrank|filterbyconf|db]. Default is allRank.
-                             allrank: outputs the results for all ranks applied for each
-                             sequence: seqname, orientation, taxon name, rank, conf, ...
-                             fixrank: only outputs the results for fixed ranks in order:
-                             domain, phylum, class, order, family, genus
-                             filterbyconf: only outputs the results for major ranks as in
-                             fixrank, results below the confidence cutoff were bin to a
-                             higher rank unclassified_node
+                             [allrank|fixrank|filterbyconf|db]. Default is
+                             allRank.
+                             allrank: outputs the results for all ranks applied
+                             for each sequence: seqname, orientation, taxon
+                             name, rank, conf, ...
+                             fixrank: only outputs the results for fixed ranks
+                             in order: domain, phylum, class, order, family,
+                             genus
+                             filterbyconf: only outputs the results for major
+                             ranks as in fixrank, results below the confidence
+                             cutoff were bin to a higher rank unclassified_node
                              db: outputs the seqname, trainset_no, tax_id, conf.
- -g,--gene <arg>             16srrna or fungallsu, the default gene is 16srrna. This
-                             option will be overwritten by --train_propfile option
- -h,--hier_outfile <arg>     tab-delimited output file containing the assignment count for
-                             each taxon in the hierarchical format. Default is null.
- -o,--outputFile <arg>       tab-delimited text output file for classification assignment.
+ -g,--gene <arg>             16srrna or fungallsu, the default gene is 16srrna.
+                             This option will be overwritten by --train_propfile
+                             option
+ -h,--hier_outfile <arg>     tab-delimited output file containing the assignment
+                             count for each taxon in the hierarchical format.
+                             Default is null.
+ -o,--outputFile <arg>       tab-delimited text output file for classification
+                             assignment.
  -q,--queryFile              legacy option, no longer needed
- -t,--train_propfile <arg>   property file containing the mapping of the training files if
-                             not using the default. Note: the training files and the
-                             property file should be in the same directory.
+ -t,--train_propfile <arg>   property file containing the mapping of the
+                             training files if not using the default. Note: the
+                             training files and the property file should be in
+                             the same directory.
  -w,--minWords <arg>         minimum number of words for each bootstrap trial.
-                             Default(maximum) is 1/8 of the words of each sequence.
-                             Minimum is 5
+                             Default(maximum) is 1/8 of the words of each
+                             sequence. Minimum is 5
 
-	
 	[Example command to classify sequences ]:
 	java -Xmx1g -jar /path/to/classifier.jar classify -c 0.5 -o usga_classified.txt -h soil_hier.txt samplefiles/USGA_2_4_B_trimmed.fasta
 	
