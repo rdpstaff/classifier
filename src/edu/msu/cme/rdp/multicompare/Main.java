@@ -59,6 +59,8 @@ public class Main {
         options.addOption(new Option(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT, CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT, true, CmdOptions.MIN_WORDS_DESC));
         options.addOption(new Option(CmdOptions.HIER_OUTFILE_SHORT_OPT, CmdOptions.HIER_OUTFILE_LONG_OPT, true, CmdOptions.HIER_OUTFILE_DESC));
         options.addOption(new Option(CmdOptions.BOOTSTRAP_SHORT_OPT, CmdOptions.BOOTSTRAP_LONG_OPT, true, CmdOptions.BOOTSTRAP_DESC));
+        options.addOption(new Option(CmdOptions.BOOTSTRAP_OUTFILE_SHORT_OPT, CmdOptions.BOOTSTRAP_OUTFILE_LONG_OPT, true, CmdOptions.BOOTSTRAP_OUTFILE_DESC));
+        options.addOption(new Option(CmdOptions.SHORTSEQ_OUTFILE_SHORT_OPT, CmdOptions.SHORTSEQ_OUTFILE_LONG_OPT, true, CmdOptions.SHORTSEQ_OUTFILE_DESC));
     }
    
 
@@ -182,6 +184,12 @@ public class Main {
                 if (conf < 0 || conf > 1) {
                     throw new IllegalArgumentException("Confidence must be in the range [0,1]");
                 }
+            }
+            if (line.hasOption(CmdOptions.SHORTSEQ_OUTFILE_SHORT_OPT)) {
+                shortseq_out = new PrintWriter(line.getOptionValue(CmdOptions.SHORTSEQ_OUTFILE_SHORT_OPT));
+            }
+            if (line.hasOption(CmdOptions.BOOTSTRAP_OUTFILE_SHORT_OPT)) {
+                bootstrap_out = new PrintStream(line.getOptionValue(CmdOptions.BOOTSTRAP_OUTFILE_SHORT_OPT));
             }
              
             args = line.getArgs();

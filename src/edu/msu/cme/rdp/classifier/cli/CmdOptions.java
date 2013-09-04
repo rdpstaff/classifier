@@ -43,6 +43,8 @@ public class CmdOptions {
     public static final String BOOTSTRAP_LONG_OPT = "conf";
     public static final String RANK_LONG_OPT = "rank";
     public static final String TAXON_LONG_OPT = "taxon";
+    public static final String BOOTSTRAP_OUTFILE_LONG_OPT = "bootstrap_outfile";
+    public static final String SHORTSEQ_OUTFILE_LONG_OPT = "shortseq_outfile";
     
     
     //short options
@@ -56,6 +58,8 @@ public class CmdOptions {
     public static final String BOOTSTRAP_SHORT_OPT = "c"; 
     public static final String RANK_SHORT_OPT = "r";
     public static final String TAXON_SHORT_OPT = "n";
+    public static final String BOOTSTRAP_OUTFILE_SHORT_OPT = "b";
+    public static final String SHORTSEQ_OUTFILE_SHORT_OPT = "s";
     
     // description of the options
     public static final String QUERYFILE_DESC = "legacy option, no longer needed ";
@@ -73,5 +77,6 @@ public class CmdOptions {
     public static final String HIER_OUTFILE_DESC = "tab-delimited output file containing the assignment count for each taxon in the hierarchical format. Default is null.";
     public static final String BOOTSTRAP_DESC = "assignment confidence cutoff used to determine the assignment count for each taxon. Range [0-1], Default is " + DEFAULT_CONF + ".";
   
-
+    public static final String BOOTSTRAP_OUTFILE_DESC = "the output file containing the number of matching assignments out of 100 bootstraps for major ranks. Default is null";
+    public static final String SHORTSEQ_OUTFILE_DESC = "the output file containing the sequence names that are too short to be classified";
 }
