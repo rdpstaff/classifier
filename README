@@ -107,6 +107,10 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
 
 4. Merge assignment count results
     If you have classified samples at different time using the same training set, you can merger multiple assignment count results into one assignment count file, keeping one column for each unique sample. If same sample occurred more than once, the taxon counts for this sample will be combined. 
+    
+    [Example command to merge three assignment count results]:
+	java -Xmx1g -jar /path/to/classifier.jar merge-count merged_hier.txt sampleset1_hier.txt sampleset2_hier.txt sampleset3_hier.txt
+
 
 5. Retrain the Classifier
 	a. Follow these steps when there is a need to retrain Classifier, such as novel lineages, newly named type organisms, taxonomic rearrangements, better training set covering specific taxa, or alternative taxonomy. Two files, a taxonomy file and a training sequence file with lineage are required. Prefer high quality, full length sequences, or at least covering the entire region of gene of interest. See samplefiles for example data files. The 16S rRNA training data and Fungal LSU training data can be download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
