@@ -21,7 +21,6 @@ import edu.msu.cme.rdp.classifier.ClassifierCmd;
 import edu.msu.cme.rdp.classifier.cli.CmdOptions;
 import edu.msu.cme.rdp.classifier.io.ClassificationResultFormatter;
 import edu.msu.cme.rdp.classifier.utils.ClassifierFactory;
-import edu.msu.cme.rdp.multicompare.MultiClassifier.MultiClassifierResult;
 import edu.msu.cme.rdp.multicompare.taxon.MCTaxon;
 import edu.msu.cme.rdp.multicompare.visitors.DefaultPrintVisitor;
 import edu.msu.cme.rdp.taxatree.ConcretRoot;

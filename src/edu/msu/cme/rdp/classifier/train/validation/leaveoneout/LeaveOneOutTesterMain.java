@@ -21,11 +21,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
 import edu.msu.cme.rdp.classifier.train.validation.NBClassifier;
 import edu.msu.cme.rdp.classifier.train.validation.TreeFactory;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 
 public class LeaveOneOutTesterMain {
 
@@ -42,7 +42,8 @@ public class LeaveOneOutTesterMain {
     public static final String TRAIN_SEQFILE_SHORT_OPT = "s";
     public static final String TRAIN_TAXONFILE_SHORT_OPT = "t";
     public static final String LENGTH_SHORT_OPT = "l";
-    
+    public static final String HIDETAXON_SHORT_OPT = "h";
+    //public static final String KMER_SHORT_OPT = "k";
     
     // description of the options
     public static final String TRAIN_SEQFILE_DESC = "training files in fasta format labelled with the lineage information. "
@@ -58,29 +59,35 @@ public class LeaveOneOutTesterMain {
     
     static {
         options.addOption(new Option(TRAIN_SEQFILE_SHORT_OPT, TRAIN_SEQFILE_LONG_OPT, true, TRAIN_SEQFILE_DESC));
-        options.addOption(new Option(TRAIN_TAXONFILE_SHORT_OPT, TRAIN_TAXONFILE_LONG_OPT, true, TRAIN_TAXONFILE_DESC));
+        options.addOption(new Option(TRAIN_TAXONFILE_SHORT_OPT, TRAIN_TAXONFILE_LONG_OPT, true, TRAIN_TAXONFILE_DESC + " Recommend removing duplicate seqeunces using command rmdupseq"));
         options.addOption(new Option(QUERYFILE_SHORT_OPT, QUERYFILE_LONG_OPT, true, QUERYFILE_DESC));
         options.addOption(new Option(OUTFILE_SHORT_OPT, OUTFILE_LONG_OPT, true, OUTFILE_DESC));
         options.addOption(new Option(LENGTH_SHORT_OPT, LENGTH_LONG_OPT, true, LENGTH_DESC));
         options.addOption(new Option(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT, CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT, true, CmdOptions.MIN_WORDS_DESC));
+        options.addOption(new Option(HIDETAXON_SHORT_OPT, "hideTaxon", false, 
+                "If set, remove the lowest taxon where a query sequence originally labelled from the training set. Default only remove the query seq from training set"));        
+        //options.addOption(new Option(KMER_SHORT_OPT, "kmersize", true, "the size of the kmer (word), default is 8. Recommend 6-9"));
     }
-    TreeFactory factory = null;
-    BufferedWriter outWriter = null;
-
+    
     /** Creates a new Classification*/
-    public LeaveOneOutTesterMain(String taxFile, String trainseqFile, String testFile, String outFile, int numGoodBases, int min_bootstrap_words)
-            throws FileNotFoundException, IOException {
+    public LeaveOneOutTesterMain(String taxFile, String trainseqFile, String testFile, String outFile, 
+            int numGoodBases, int min_bootstrap_words, boolean hideTaxon) throws IOException {
         boolean useSeed = true;  // use seed for random word selection
-        factory = new TreeFactory(new FileReader(taxFile));
-        // create a tree
-        createTree(factory, trainseqFile);
+        System.err.println("#before TreeFactory\tfree=" + Runtime.getRuntime().freeMemory()/1000000 + "\ttotal=" + Runtime.getRuntime().totalMemory()/1000000 );
 
-        outWriter = new BufferedWriter(new FileWriter(outFile));
+        TreeFactory factory = new TreeFactory(new FileReader(taxFile));
+        // create a tree
+        System.err.println("#before craeteTree\tfree=" + Runtime.getRuntime().freeMemory()/1000000 + "\ttotal=" + Runtime.getRuntime().totalMemory()/1000000 );
+
+        createTree(factory, trainseqFile);
+        System.err.println("#after craeteTree\tfree=" + Runtime.getRuntime().freeMemory()/1000000 + "\ttotal=" + Runtime.getRuntime().totalMemory()/1000000 );
+
+        BufferedWriter outWriter = new BufferedWriter(new FileWriter(outFile));
         LineageSequenceParser parser = new LineageSequenceParser(new File(testFile));
         LeaveOneOutTester tester = new LeaveOneOutTester(outWriter, numGoodBases);
 
         outWriter.write("taxon file: " + taxFile + "\n" + "train sequence file: " + trainseqFile + "\n");
-        outWriter.write("word size: " + GoodWordIterator.WORDSIZE + "\n");
+        outWriter.write("word size: " + GoodWordIterator.getWordsize() + "\n");
         outWriter.write("minimum number of words for bootstrap: " + min_bootstrap_words + "\n");
 
         if (numGoodBases > 0) {    // do partial   
@@ -94,7 +101,7 @@ public class LeaveOneOutTesterMain {
         }
         outWriter.write("test rank: " + factory.getLowestRank());
 
-        tester.classify(factory, parser, useSeed, min_bootstrap_words);
+        tester.classify(factory, parser, useSeed, min_bootstrap_words, hideTaxon);
 
     }
 
@@ -122,7 +129,8 @@ public class LeaveOneOutTesterMain {
         String trainTaxonFile = null;
         int length = 0;
         int min_bootstrap_words = NBClassifier.MIN_BOOTSTRSP_WORDS;
-
+        boolean hideTaxon = false;
+         
         try {
             CommandLine line = new PosixParser().parse(options, args);
 
@@ -160,6 +168,18 @@ public class LeaveOneOutTesterMain {
                     throw new IllegalArgumentException(CmdOptions.MIN_BOOTSTRAP_WORDS_LONG_OPT + " must be at least " + NBClassifier.MIN_BOOTSTRSP_WORDS);
                 }                
             }
+            
+            if (line.hasOption(HIDETAXON_SHORT_OPT)) {
+                hideTaxon = true;
+            }        
+            /*
+            if (line.hasOption(KMER_SHORT_OPT)) {
+                int kmer = Integer.parseInt(line.getOptionValue(KMER_SHORT_OPT));
+                if (kmer < 1) {
+                    throw new IllegalArgumentException(length + " must be a positive number ");
+                }
+                GoodWordIterator.setWordSize(kmer);
+            }*/
         } catch (Exception e) {
             System.out.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(120, "LeaveOneOutTesterMain", "", options, "", true);
@@ -167,7 +187,8 @@ public class LeaveOneOutTesterMain {
         }
 
 
-        LeaveOneOutTesterMain aClassifier = new LeaveOneOutTesterMain(trainTaxonFile, trainSeqFile, queryFile, outputFile, length, min_bootstrap_words);
+        LeaveOneOutTesterMain tester = new LeaveOneOutTesterMain(trainTaxonFile, trainSeqFile, 
+                queryFile, outputFile, length, min_bootstrap_words, hideTaxon);
 
     }
 }

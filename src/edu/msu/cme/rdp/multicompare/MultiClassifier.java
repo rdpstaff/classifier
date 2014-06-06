@@ -57,37 +57,6 @@ public class MultiClassifier {
         }
     }
 
-    public class MultiClassifierResult {
-
-        private ConcretRoot<MCTaxon> root;
-        private List<MCSample> samples;
-        private List<String> badSequences;
-        private Map<String, Integer> seqCountMap;
-
-        public MultiClassifierResult(ConcretRoot root, List<MCSample> samples, List<String> badSequences, Map<String, Integer> seqCountMap) {
-            this.root = root;
-            this.samples = samples;
-            this.badSequences = badSequences;
-            this.seqCountMap = seqCountMap;
-        }
-
-        public ConcretRoot getRoot() {
-            return root;
-        }
-
-        public List<MCSample> getSamples() {
-            return samples;
-        }
-
-        public List<String> getBadSequences() {
-            return badSequences;
-        }
-
-        public Map<String, Integer> getSeqCountMap() {
-            return seqCountMap;
-        }
-    }
-
     public MultiClassifierResult multiCompare(List<MCSample> samples) throws IOException {
         return multiCompare(samples, DEFAULT_CONF, DEFAULT_ASSIGN_WRITER, DEFAULT_FORMAT, Classifier.MIN_BOOTSTRSP_WORDS);
     }
@@ -109,7 +78,9 @@ public class MultiClassifier {
      */
     public MultiClassifierResult multiCompare(List<MCSample> samples, float confidence, PrintWriter assign_out,
             ClassificationResultFormatter.FORMAT format, int min_bootstrap_words) throws IOException {
-        ConcretRoot<MCTaxon> root = new ConcretRoot<MCTaxon>(new MCTaxon(Taxon.ROOT_TAXON));
+        HierarchyTree sampleTreeRoot  = classifierFactory.getRoot();
+        ConcretRoot<MCTaxon> root = new ConcretRoot<MCTaxon>(new MCTaxon(sampleTreeRoot.getTaxid(), sampleTreeRoot.getName(), sampleTreeRoot.getRank()) );
+
         Classifier classifier = classifierFactory.createClassifier();
         List<String> badSequences = new ArrayList();
         Map<String, Integer> seqCountMap = new HashMap();
@@ -213,7 +184,7 @@ public class MultiClassifier {
         RankAssignment lastAssignment = null;
         RankAssignment twoAgo = null;
         StringBuffer lineage = new StringBuffer();
-
+        
         MCTaxon taxon = null;
         for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
 

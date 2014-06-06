@@ -22,6 +22,10 @@ import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
 import edu.msu.cme.rdp.classifier.train.validation.HierarchyTree;
 import edu.msu.cme.rdp.classifier.train.validation.Taxonomy;
 import edu.msu.cme.rdp.classifier.train.validation.TreeFactory;
+import edu.msu.cme.rdp.readseq.readers.IndexedSeqReader;
+import edu.msu.cme.rdp.readseq.readers.Sequence;
+import edu.msu.cme.rdp.readseq.readers.SequenceReader;
+import static edu.msu.cme.rdp.readseq.utils.ResampleSeqFile.randomSelectIndices;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -35,37 +39,7 @@ import java.util.Set;
  * @author wangqion
  */
 public class RdmSelectTaxon {
-
-    /**
-     * random select (without replacement) a fraction of sequences from the input file
-     * @param infile
-     * @param fraction
-     * @return 
-     * @throws IOException
-     */
-    public static Set<String> randomSelectSeq(File infile, float fraction) throws IOException{
-        Set<String> selectedSeqIDs = new HashSet<String>();
-        ArrayList<String> allIDs = new ArrayList<String>();
-
-        LineageSequenceParser parser = new LineageSequenceParser(infile);
-
-        while ( parser.hasNext() ){
-            LineageSequence pSeq = parser.next();
-            allIDs.add(pSeq.getSeqName());
-        }
-        parser.close();
-
-        int testCount = (int) (((float) allIDs.size()) * fraction);
-        while (selectedSeqIDs.size() < testCount){
-            int rdmIndex = (int) (Math.floor(Math.random()* (double)allIDs.size()));
-
-            selectedSeqIDs.add(allIDs.get(rdmIndex));
-            allIDs.remove(rdmIndex);
-        }
-
-        return selectedSeqIDs;
-
-    }
+ 
     
     /**
      * Random select taxa at given rank, and return all the sequence IDs assigned to the selected taxa.
@@ -96,12 +70,7 @@ public class RdmSelectTaxon {
 
         // random select nodes at the give rank level
         ArrayList<HierarchyTree> nodeList = new ArrayList<HierarchyTree>();
-        factory.getRoot().getNodeList(rank, nodeList);
-
-        //xxx print the size of the nodes
-        for ( HierarchyTree node: nodeList){
-           // System.err.println(node.getName() + "\t" + node.getNumOfLeaves());
-        }
+        factory.getRoot().getNodeList(rank, nodeList);       
 
         Set<HierarchyTree> selectedNodes = new HashSet<HierarchyTree>();
 
@@ -109,7 +78,7 @@ public class RdmSelectTaxon {
         while (selectedNodes.size() < testCount){
             int rdmIndex = (int) (Math.floor(Math.random()* (double)nodeList.size()));
             selectedNodes.add(nodeList.get(rdmIndex));
-            System.err.println("selected " + nodeList.get( rdmIndex).getName() + "\t" + nodeList.get(rdmIndex).getNumOfLeaves());
+            //System.err.println("selected " + nodeList.get( rdmIndex).getName() + "\t" + nodeList.get(rdmIndex).getNumOfLeaves());
             nodeList.remove(rdmIndex);
         }
 
@@ -127,12 +96,25 @@ public class RdmSelectTaxon {
 
     }
 
-     public static void main(String[] args) throws IOException {
-        String Usage = "tax_file, source_file, fraction, rank";
-        File tax_file = new File(args[0]);
-        File source_file = new File(args[1]);
+     public static void main(String[] args) throws Exception {
+        String Usage = "seqfile fraction tax_file rank \n" + 
+                " Without tax_file and rank option, sequences will be randomly selected without replacement\n" +
+                " with tax_file and rank option, only taxa at the certain rank level will be randomly selected";
+        
+        if ( args.length != 4){
+            throw new IllegalArgumentException(Usage);
+        }
+        
+        File seq_file = new File(args[0]);
+        float fraction = Float.parseFloat(args[1]);
+       
+        if ( fraction <= 0 && fraction > 1.0){
+            throw new Exception("number of fraction should be between 0 and 1");
+        }
+               
+        File tax_file = new File(args[2]);
+        RdmSelectTaxon.randomSelectTaxon(tax_file, seq_file, fraction, args[3]);
 
-        RdmSelectTaxon.randomSelectTaxon(tax_file, source_file, Float.parseFloat(args[2]), args[3]);
 
     }
 }

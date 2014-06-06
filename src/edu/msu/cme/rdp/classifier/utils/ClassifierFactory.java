@@ -38,7 +38,7 @@ public class ClassifierFactory {
     private static final String defaultDataProp = "rRNAClassifier.properties";
     private static String parentPath;
     private static String dataProp = dataDir + RRNA_16S_GENE + "/" + defaultDataProp;
-    private static HashMap<String, ClassifierFactory> classifierFactoryMap = new HashMap<String, ClassifierFactory>(); // key=genename
+    private static HashMap<String, ClassifierFactory> classifierFactoryMap = new HashMap<String, ClassifierFactory>(); // key=genename or trainset_no
     private static boolean relativePath = true;
 
     /** Creates a new instance of ClassifierFactory. */
@@ -101,21 +101,39 @@ public class ClassifierFactory {
                 factory.trainingInfo = new TrainingInfo();
 
                 InputStreamReader in = new InputStreamReader(ClassifierFactory.class.getResourceAsStream(dataDir + gene + "/" + convert("probabilityList")));
-                factory.trainingInfo.createGenusWordProbList(in);
+		try {
+		    factory.trainingInfo.createGenusWordProbList(in);
+		} finally {
+		    in.close();
+		}
 
                 // the tree information has to be read after at least one of the other
                 //three files because we need to set the version information.
                 in = new InputStreamReader(ClassifierFactory.class.getResourceAsStream(dataDir + gene + "/" + convert("bergeyTree")));
-                factory.trainingInfo.createTree(in);
+		try {
+		    factory.trainingInfo.createTree(in);
+		} finally {
+		    in.close();
+		}
 
                 in = new InputStreamReader(ClassifierFactory.class.getResourceAsStream(dataDir + gene + "/" + convert("probabilityIndex")));
-                factory.trainingInfo.createProbIndexArr(in);
+		try {
+		    factory.trainingInfo.createProbIndexArr(in);
+		} finally {
+		    in.close();
+		}
 
                 in = new InputStreamReader(ClassifierFactory.class.getResourceAsStream(dataDir + gene + "/" + convert("wordPrior")));
-                factory.trainingInfo.createLogWordPriorArr(in);
+		try {
+		    factory.trainingInfo.createLogWordPriorArr(in);
+		} finally {
+		    in.close();
+		}
                 factory.classifierVersion = convert("classifierVersion");
 
                 classifierFactoryMap.put(gene, factory);
+                // we need to put the trainsetNo in the key map
+                classifierFactoryMap.put(Integer.toString(factory.getHierarchyTrainsetNo().getTrainsetNo()), factory);
             } else {
                 getNonDefaultFactory(gene);
             }
@@ -150,6 +168,7 @@ public class ClassifierFactory {
             factory.classifierVersion = convert("classifierVersion");
 
             classifierFactoryMap.put(gene, factory);
+            classifierFactoryMap.put(Integer.toString(factory.getHierarchyTrainsetNo().getTrainsetNo()), factory);
         }
         return classifierFactoryMap.get(gene);
     }

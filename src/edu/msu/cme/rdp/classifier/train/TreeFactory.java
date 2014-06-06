@@ -91,6 +91,9 @@ public class TreeFactory {
                 Taxonomy tax = new Taxonomy(taxid, taxname, pid, depth, st.nextToken().trim());
                 taxList.add(tax);
                 taxnameMap.put(taxname, taxList);
+                if ( taxidMap.containsKey(taxid)){
+                    throw new NameRankDupException("Error: duplicate taxid found : " + taxid);
+                }
                 taxidMap.put(new Integer(taxid), tax);
                 String name_rank = (taxname + "\t" + tax.hierLevel).toLowerCase();
                 Integer existCount = taxnameRankMap.get(name_rank);
@@ -404,7 +407,7 @@ public class TreeFactory {
     private void displayTrainingTree(RawHierarchyTree root) throws IOException {
         Taxonomy taxon = ((Taxonomy) root.getTaxonomy());
 
-        treeFile.write("<TreeNode name=\"" + root.getName().replaceAll("\"", "&quot;") + "\" taxid=\""
+        treeFile.write("<TreeNode name=\"" + root.getName().replaceAll("\"", "&quot;").replaceAll("&", "") + "\" taxid=\""
                 + taxon.taxID + "\" rank=\"" + taxon.hierLevel + "\" parentTaxid=\""
                 + taxon.parentID + "\" leaveCount=\""
                 + root.getLeaveCount() + "\" genusIndex=\"" + root.getGenusIndex()

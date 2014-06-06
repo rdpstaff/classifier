@@ -8,6 +8,7 @@
 package edu.msu.cme.rdp.classifier.train;
 
 import edu.msu.cme.rdp.readseq.readers.Sequence;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;

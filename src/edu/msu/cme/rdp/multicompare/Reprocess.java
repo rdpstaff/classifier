@@ -181,7 +181,7 @@ public class Reprocess {
         
         MultiClassifier multiClassifier = new MultiClassifier(train_propfile, gene);
         DefaultPrintVisitor printVisitor = new DefaultPrintVisitor(heir_out, samples);
-        MultiClassifier.MultiClassifierResult result = multiClassifier.multiClassificationParser(samples, conf, assign_out, format, rank, taxonFilter);
+        MultiClassifierResult result = multiClassifier.multiClassificationParser(samples, conf, assign_out, format, rank, taxonFilter);
 
         result.getRoot().topDownVisit(printVisitor);
 

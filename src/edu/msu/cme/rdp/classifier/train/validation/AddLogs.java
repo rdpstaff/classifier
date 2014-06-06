@@ -25,8 +25,7 @@ class AddLogs {
     
     double pMax       = Math.max( p1, p2 );
     double pMin       = Math.min( p1, p2 );
-    double diff       = pMax - pMin;
-    double scaledDiff = diff * xlateFactor;
+    double scaledDiff = (pMax - pMin) * xlateFactor;
     double index      = Math.floor( scaledDiff );
     double delta      = scaledDiff - index;
     double retVal;

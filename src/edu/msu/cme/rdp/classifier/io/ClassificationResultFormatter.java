@@ -47,7 +47,7 @@ public class ClassificationResultFormatter {
             case fixRank:
                 return getFixRankOutput(result);
             case dbformat:
-                return getDBOutput(result);
+                return getDBOutput(result, conf);
             case filterbyconf:
                 return getFilterByConfOutput(result, conf);
             default:
@@ -93,7 +93,7 @@ public class ClassificationResultFormatter {
 
         HashMap<String, RankAssignment> rankMap = new HashMap<String, RankAssignment>();
         for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
-            rankMap.put(assignment.getRank(), assignment);
+            rankMap.put(assignment.getRank().toLowerCase(), assignment);
         }
         
         // if the score is missing for the rank, report the conf and name from the lower rank
@@ -129,7 +129,7 @@ public class ClassificationResultFormatter {
 
         HashMap<String, RankAssignment> rankMap = new HashMap<String, RankAssignment>();
         for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
-            rankMap.put(assignment.getRank(), assignment);
+            rankMap.put(assignment.getRank().toLowerCase(), assignment);
         }
         
         // if the score is missing for the rank, report the conf and name from the lower rank if above the conf
@@ -165,14 +165,19 @@ public class ClassificationResultFormatter {
     }
 
 
-    public static String getDBOutput(ClassificationResult result) {
+    public static String getDBOutput(ClassificationResult result, float conf) {
         StringBuilder assignmentStr = new StringBuilder();
-        Iterator<RankAssignment> it = result.getAssignments().iterator();
-
-        while (it.hasNext()) {
-            RankAssignment assign = it.next();
-            assignmentStr.append(result.getSequence().getSeqName()).append("\t").append(result.getTrainsetNo()).append("\t").append(assign.getTaxid()).append("\t").append(assign.getConfidence()).append("\n");
-        }
+	boolean set = false;
+	List assignments = result.getAssignments();
+        for (int i = assignments.size() - 1; i >= 0; i--) {
+        	int markAssigned = 0;
+		RankAssignment assign = (RankAssignment) assignments.get(i);
+		if (!set && assign.getConfidence() >= conf) {
+			markAssigned = 1;
+			set = true;
+		}
+ 		assignmentStr.append(result.getSequence().getSeqName()).append("\t").append(result.getTrainsetNo()).append("\t").append(assign.getTaxid()).append("\t").append(assign.getConfidence()).append("\t").append(markAssigned).append("\n");
+	}
 
         return assignmentStr.toString();
     }

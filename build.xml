@@ -146,4 +146,16 @@
         <echo>java -jar "${dist.jar.resolved}"</echo>
         <move file="${dist.dir}/data.tgz" tofile="${build.classes.dir}/data.tgz" overwrite="true" />
     </target>
+
+    <target name="junit" depends="compile-test">
+     <junit printsummary="yes" haltonfailure="yes" showoutput="yes">
+        <classpath path="${javac.test.classpath}:${build.classes.dir}:${build.test.classes.dir}"/>
+
+        <formatter type="xml"/>
+
+        <batchtest fork="yes">
+            <fileset dir="${test.src.dir}" includes="**/*Test.java"/>
+        </batchtest>
+    </junit>
+</target>
 </project>

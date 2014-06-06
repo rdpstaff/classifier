@@ -18,11 +18,11 @@ import edu.msu.cme.rdp.classifier.train.validation.ValidationClassificationResul
 import edu.msu.cme.rdp.classifier.train.validation.ValidClassificationResultFacade;
 import edu.msu.cme.rdp.classifier.train.validation.CorrectAssignment;
 import edu.msu.cme.rdp.classifier.train.validation.DecisionMaker;
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.validation.HierarchyTree;
 import edu.msu.cme.rdp.classifier.train.validation.Taxonomy;
 import edu.msu.cme.rdp.classifier.train.validation.TreeFactory;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 
 /** */
 public class WindowTester {

@@ -21,12 +21,13 @@ import edu.msu.cme.rdp.classifier.train.validation.StatusCount;
 import edu.msu.cme.rdp.classifier.train.validation.ValidationClassificationResult;
 import edu.msu.cme.rdp.classifier.train.validation.ValidClassificationResultFacade;
 import edu.msu.cme.rdp.classifier.train.validation.DecisionMaker;
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
 import edu.msu.cme.rdp.classifier.train.validation.HierarchyTree;
 import edu.msu.cme.rdp.classifier.train.validation.Taxonomy;
 import edu.msu.cme.rdp.classifier.train.validation.TreeFactory;
+import edu.msu.cme.rdp.readseq.utils.ResampleSeqFile;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
@@ -59,7 +60,7 @@ import java.util.Set;
         
         Set<String> selectedTestSeqIDs = null;
         if ( rdmSelectedRank == null){
-            selectedTestSeqIDs = RdmSelectTaxon.randomSelectSeq(source_file, fraction);
+            selectedTestSeqIDs = ResampleSeqFile.randomSelectSeq(source_file, fraction);
         }else {
             selectedTestSeqIDs = RdmSelectTaxon.randomSelectTaxon(tax_file, source_file, fraction, rdmSelectedRank);
         }
@@ -125,7 +126,7 @@ import java.util.Set;
         parser.close();
 
         outWriter.write("taxon file\t" + tax_file.getName() + "\n" + "train sequence file\t" + source_file.getName() + "\n");
-        outWriter.write("word size\t" + GoodWordIterator.WORDSIZE + "\n");
+        outWriter.write("word size\t" + GoodWordIterator.getWordsize() + "\n");
         outWriter.write("minimum number of words for bootstrap\t" + min_bootstrap_words + "\n");
         if ( partialLength != null){
             outWriter.write("length\t" + partialLength + "\n");

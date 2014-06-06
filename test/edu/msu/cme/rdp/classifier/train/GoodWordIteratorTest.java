@@ -7,7 +7,7 @@
 
 package edu.msu.cme.rdp.classifier.train;
 
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import junit.framework.*;
 import java.io.*;
 

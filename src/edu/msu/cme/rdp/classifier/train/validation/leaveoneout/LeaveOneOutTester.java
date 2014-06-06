@@ -18,10 +18,10 @@ import edu.msu.cme.rdp.classifier.train.validation.ValidationClassificationResul
 import edu.msu.cme.rdp.classifier.train.validation.ValidClassificationResultFacade;
 import edu.msu.cme.rdp.classifier.train.validation.CorrectAssignment;
 import edu.msu.cme.rdp.classifier.train.validation.DecisionMaker;
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
 import edu.msu.cme.rdp.classifier.train.validation.*;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 
 /** */
 public class LeaveOneOutTester {
@@ -52,8 +52,8 @@ public class LeaveOneOutTester {
      * @param useSeed
      * @throws IOException
      */
-    public ArrayList<HashMap<String, StatusCount>> classify(TreeFactory factory, LineageSequenceParser parser, boolean useSeed, int min_bootstrap_words)
-            throws IOException {
+    public ArrayList<HashMap<String, StatusCount>> classify(TreeFactory factory, LineageSequenceParser parser, 
+            boolean useSeed, int min_bootstrap_words, boolean hideTaxon)throws IOException {
 
         testRank = factory.getLowestRank();
         List<ValidClassificationResultFacade> resultList = new ArrayList<ValidClassificationResultFacade>();
@@ -66,7 +66,6 @@ public class LeaveOneOutTester {
         if (nodeMap.isEmpty()) {
             throw new IllegalArgumentException("\nThere is no node in " + testRank + " level!");
         }
-
        
         ArrayList<HashMap<String, StatusCount>> statusCountList = new ArrayList<HashMap<String, StatusCount>>();
         // initialize a list of statusCount, one for each bootstrap from 0 to 100
@@ -76,8 +75,7 @@ public class LeaveOneOutTester {
              for (String rank: factory.getRankSet()){
                  statusCountMap.put(rank, new StatusCount());
              }
-         }
-        
+         }        
         
         int i = 0;
         while (parser.hasNext()) {
@@ -101,13 +99,17 @@ public class LeaveOneOutTester {
             //for leave-one-out testing, we need to remove the word occurrence for
             //the current sequence. This is similar to hide a sequence leaf.
             HierarchyTree curTree = nodeMap.get((String) pSeq.getAncestors().get(pSeq.getAncestors().size() - 1));
-            curTree.hideSeq(wordIterator);
-            //
-            if ( curTree.isSingleton()){
-                nodeMap.remove((String) pSeq.getAncestors().get(pSeq.getAncestors().size() - 1));
+            if ( !hideTaxon){
+                if ( curTree.isSingleton()){
+                    nodeMap.remove(curTree.getName());
+                }else {
+                    curTree.hideSeq(wordIterator);
+                }
+            }else {
+                nodeMap.remove(curTree.getName());
             }
+            
             List<ValidationClassificationResult> result = dm.getBestClasspath( wordIterator, nodeMap, useSeed, min_bootstrap_words);
-
             ValidClassificationResultFacade resultFacade = new ValidClassificationResultFacade(pSeq, result);
             resultFacade.setLabeledNode(curTree);
             compareClassificationResult(resultFacade);
@@ -117,12 +119,16 @@ public class LeaveOneOutTester {
           
             resultList.add(resultFacade);
 
-            //System.out.print(i + " ");
-            i++;
-            // recover the wordOccurrence of the genus node, unhide the sequence leaf
-            curTree.unhideSeq(wordIterator);
-            if ( curTree.isSingleton()){
-                nodeMap.put((String) pSeq.getAncestors().get(pSeq.getAncestors().size() - 1), curTree);
+            System.out.print(i++ + " ");
+            if ( !hideTaxon){                
+                if ( curTree.isSingleton()){
+                    nodeMap.put(curTree.getName(), curTree);
+                }else {
+                    // recover the wordOccurrence of the genus node, unhide the sequence leaf
+                    curTree.unhideSeq(wordIterator);
+                }
+            }else {
+                nodeMap.put(curTree.getName(), curTree);
             }
         }
 

@@ -10,8 +10,8 @@
  */
 package edu.msu.cme.rdp.classifier.train.validation;
 
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -22,16 +22,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.StringTokenizer;
 
 public class TreeFactory {
 
     private HierarchyTree root;
-    private Map taxidMap = new HashMap();  // contains the taxname and the taxonomy
+    private HashMap<String, ArrayList> taxidMap = new HashMap<String, ArrayList>();  // contains the taxname and the taxonomy
+    
     private Set<String> rankSet = new HashSet<String>();  // contains the taxname and the taxonomy
-    private float[] wordPriorArr = new float[(int) Math.pow(4, GoodWordIterator.WORDSIZE)];    // an array of prior for words
+    private float[] wordPriorArr = new float[(int) Math.pow(4, GoodWordIterator.getWordsize())];    // an array of prior for words
     // the index is the integer form of the word . for size 8, 65536 possible words
     private int totalSequences = 0;
     private final float WF1 = (float) 0.5;   // assume uniform prior for all the words
@@ -71,7 +72,7 @@ public class TreeFactory {
                 String taxname = st.nextToken();
                 int pid = Integer.parseInt(st.nextToken());
                 int depth = Integer.parseInt(st.nextToken());
-                List taxList = (ArrayList) taxidMap.get(taxname);
+                ArrayList taxList = taxidMap.get(taxname);
                 if (taxList == null) {  // if this is an empty list, create a new one
                     taxList = new ArrayList();
                     taxidMap.put(taxname, taxList);
@@ -98,6 +99,45 @@ public class TreeFactory {
             throw new IllegalArgumentException("Error: no root taxon with depth '0' defined in the taxonomy file.");
         }
     }
+   
+    /**
+     * build the taxonomic tree without sequences attached to it
+     */
+    public void buildTree(){
+        HashMap<Integer, HierarchyTree> nodesBuilt = new HashMap<Integer, HierarchyTree>();
+        nodesBuilt.put(root.getTaxonomy().getTaxID(), root);
+        
+        HashMap<Integer, Taxonomy> tempMap = new HashMap<Integer, Taxonomy>(); // key= taxID
+        for ( ArrayList<Taxonomy> taxonList: this.taxidMap.values()){
+            for ( Taxonomy taxon: taxonList){
+                tempMap.put(taxon.taxID, taxon);
+            }
+        }
+        for (Taxonomy taxon: tempMap.values()){
+            if ( !nodesBuilt.containsKey(taxon.getTaxID())){
+                // find the top level ancestor that was built already
+                Stack<Taxonomy> missingNodes = new Stack<Taxonomy>();
+                missingNodes.push(taxon);
+                Taxonomy parentTaxon = tempMap.get(taxon.getParentID());
+                HierarchyTree parent = nodesBuilt.get(parentTaxon.getTaxID());
+                while( parent == null){
+                    missingNodes.push(parentTaxon);
+                    parentTaxon = tempMap.get(parentTaxon.getParentID());
+                    parent = nodesBuilt.get(parentTaxon.getTaxID());
+                }
+                // then build from top down
+                while(!missingNodes.empty()){
+                    Taxonomy temp = missingNodes.pop();
+                    HierarchyTree tempTree = new HierarchyTree(temp.getName(), parent, temp);
+                    nodesBuilt.put(tempTree.getTaxonomy().getTaxID(), tempTree);
+                    parent = tempTree;
+                    //System.err.println("build tree node: " + tempTree.getName() + "\t" + tempTree.getParent().getName());
+                }
+            }
+        }
+
+    }
+
 
     /** For the given sequence name, its ancestors, and the sequence, creates a
      * HierarchyTree for each ancestor,

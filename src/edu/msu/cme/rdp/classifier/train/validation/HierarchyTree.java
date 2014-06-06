@@ -10,8 +10,8 @@
  */
 package edu.msu.cme.rdp.classifier.train.validation;
 
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +28,7 @@ public class HierarchyTree {
     private HierarchyTree parent;
     private Map<String, HierarchyTree> subclasses = new HashMap();
     private Map leaves = new HashMap();
-    private int[] wordOccurrence;  //size is 64k for word size 8
+    private short[] wordOccurrence;  //size is 64k for word size 8
     private boolean wordOccurDone = false;
     private int totalSeqs = 0; // total number of train sequences
     private int numTotalTestedseq = 0;   // no singleton included
@@ -113,7 +113,7 @@ public class HierarchyTree {
 
         GoodWordIterator iterator = new GoodWordIterator(pSeq.getSeqString());
         if (wordOccurrence == null) {
-            wordOccurrence = new int[iterator.getMask() + 1];
+            wordOccurrence = new short[iterator.getMask() + 1];
         }
 
         // create a temporary list and initialize the value to be -1;
@@ -272,7 +272,7 @@ public class HierarchyTree {
                 len = child.getWordOccurrenceSize();
             }
             
-            wordOccurrence = new int[len];
+            wordOccurrence = new short[len];
             for (int i = 0; i < len; i++) {
                 for(HierarchyTree child : subclasses.values()) {
                     wordOccurrence[i] += child.getWordOccurrence(i);

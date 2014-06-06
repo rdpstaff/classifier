@@ -6,9 +6,9 @@
  */
 package edu.msu.cme.rdp.classifier.train.validation;
 
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

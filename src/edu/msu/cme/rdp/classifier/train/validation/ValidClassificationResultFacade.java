@@ -57,7 +57,7 @@ public class ValidClassificationResultFacade {
         labeledNode = n;
     }
 
-    /** print the labelled path and the assigned path
+    /** print the labeled path and the assigned path
      * Note: the true path is list of string of ancestors for a sequence,
      * the assigned path is a list of ClassificationResult for a sequence.
      */

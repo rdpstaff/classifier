@@ -7,9 +7,9 @@
  */
 package edu.msu.cme.rdp.classifier.train.validation;
 
-import edu.msu.cme.rdp.classifier.train.GoodWordIterator;
 import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -38,6 +38,7 @@ public class NBClassifierTest extends TestCase {
     public void testAssignClass() throws FileNotFoundException, IOException {
         System.out.println("testassignClass");
 
+        boolean useSeed = true;
         int min_bootstrap_words = 20;
         Reader taxReader = new FileReader(System.class.getResource("/test/classifier/testTaxon.txt").getFile());
 
@@ -57,19 +58,17 @@ public class NBClassifierTest extends TestCase {
         HashMap<String, HierarchyTree> nodeMap = new HashMap<String, HierarchyTree>();
         HierarchyTree root = factory.getRoot();
         root.getNodeMap("GENUS", nodeMap);
-
+        ArrayList<HierarchyTree> nodeList = new ArrayList(nodeMap.values());
+        
         // test the first sequence
-        File queryReader = new File(System.class.getResource("/test/classifier/testNBClassifierSet.fasta").getFile());
-
+        File queryReader = new File(System.class.getResource("/test/classifier/testNBClassifierSet.fasta").getFile());        
         parser = new LineageSequenceParser(queryReader);
         LineageSequence pSeq = parser.next();
-
-        assertEquals(pSeq.getSeqName(), "XG1_child1");
-        Random randomGenerator = new Random(DecisionMaker.seed);
         GoodWordIterator iterator = new GoodWordIterator(pSeq.getSeqString());
-        int [] testWordList = GoodWordIterator.getRdmWordArr(iterator.getWordArr(), min_bootstrap_words, randomGenerator);
-        assertEquals(testWordList.length, min_bootstrap_words);
-        ValidationClassificationResult result = NBClassifier.assignClass(testWordList, factory, nodeMap);
+        NBClassifier classifier = new NBClassifier(factory, iterator.getWordArr(), nodeList, useSeed, min_bootstrap_words);
+
+        assertEquals(pSeq.getSeqName(), "XG1_child1");        
+        ValidationClassificationResult result = classifier.assignClass();
         assertEquals("G1", ((HierarchyTree) result.getBestClass()).getName());
         assertTrue(0.1 > result.getPosteriorProb());
 
@@ -79,8 +78,8 @@ public class NBClassifierTest extends TestCase {
         pSeq = parser.next();
         assertEquals(pSeq.getSeqName(), "XG2_child1");
         iterator = new GoodWordIterator(pSeq.getSeqString());
-        testWordList = GoodWordIterator.getRdmWordArr(iterator.getWordArr(), min_bootstrap_words, randomGenerator);
-        result = NBClassifier.assignClass(testWordList, factory,  nodeMap);
+        classifier = new NBClassifier(factory, iterator.getWordArr(), nodeList, useSeed, min_bootstrap_words);
+        result = classifier.assignClass();
         assertEquals("G2", ((HierarchyTree) result.getBestClass()).getName());
         assertTrue(0.2 > result.getPosteriorProb());
 
@@ -90,7 +89,8 @@ public class NBClassifierTest extends TestCase {
         pSeq = parser.next();
         assertEquals(pSeq.getSeqName(), "XPh2G6_child1");
         iterator = new GoodWordIterator(pSeq.getSeqString());
-        result = NBClassifier.assignClass(iterator.getWordArr(), factory, nodeMap);
+        classifier = new NBClassifier(factory, iterator.getWordArr(), nodeList, useSeed, min_bootstrap_words);
+        result = classifier.assignClass();
         assertEquals("G1", ((HierarchyTree) result.getBestClass()).getName());
         assertTrue(0.2 > result.getPosteriorProb());
 
@@ -104,7 +104,8 @@ public class NBClassifierTest extends TestCase {
         int G7_count = 0;
         int G8_count = 0;
         for ( int run = 0; run < DecisionMaker.NUM_OF_RUNS; run++){
-            result = NBClassifier.assignClass(iterator.getWordArr(), factory, nodeMap);
+            classifier = new NBClassifier(factory, iterator.getWordArr(), nodeList, useSeed, min_bootstrap_words);
+            result = classifier.assignClass();
             if ( ((HierarchyTree) result.getBestClass()).getName().equals("G7")){
                 G7_count ++;
             }else if ( ((HierarchyTree) result.getBestClass()).getName().equals("G8")){
@@ -115,8 +116,7 @@ public class NBClassifierTest extends TestCase {
         // each genus should be choosen at least once
         assertTrue(G7_count > 1);
         assertTrue(G8_count > 1);
-       
-        
+            
     }
 
 

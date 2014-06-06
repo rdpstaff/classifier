@@ -19,6 +19,7 @@ package edu.msu.cme.rdp.multicompare;
 import edu.msu.cme.rdp.classifier.ClassificationResult;
 import edu.msu.cme.rdp.classifier.RankAssignment;
 import edu.msu.cme.rdp.classifier.utils.ClassifierSequence;
+import edu.msu.cme.rdp.readseq.readers.SeqReader;
 import edu.msu.cme.rdp.readseq.readers.SequenceReader;
 import edu.msu.cme.rdp.readseq.readers.Sequence;
 import java.io.BufferedReader;
@@ -27,7 +28,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -38,11 +38,16 @@ import java.util.Map;
 public class MCSample {
 
     private String sampleName;
-    private SequenceReader parser = null;
+    private SeqReader parser = null;
     private List<ClassifierSequence> sampleSeqs = new ArrayList();
     private Map<String, int[]> bootstrapCountTable = new HashMap<String, int[]>();
     private Map<String, Integer> dupCountTable = new HashMap<String, Integer>();
     private int seqIndex = 0;
+
+    public MCSample(SeqReader reader, String name) {
+        this.sampleName = name;
+        this.parser = reader;
+    }
 
     public MCSample(File f) throws IOException {
         this(f, f.getName());
@@ -51,7 +56,7 @@ public class MCSample {
     public MCSample(String sampleName) {
         this.sampleName = sampleName;
     }
-    
+
     public MCSample(String sampleName, File dupCountFile) throws IOException {
         this.sampleName = sampleName;
         setDupCountFile(dupCountFile);
@@ -89,7 +94,7 @@ public class MCSample {
                 return null;
             } else {
                 return new ClassifierSequence(seq);
-            }                
+            }
         } else {
             if (seqIndex < sampleSeqs.size()) {
                 return sampleSeqs.get(seqIndex++);

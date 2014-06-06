@@ -7,6 +7,7 @@
  */
 package edu.msu.cme.rdp.classifier.train;
 
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -181,7 +182,20 @@ public class RawHierarchyTree {
         }
         return leaveCount;
     }
-
+    
+    /* the number of lowest level nodes below */
+    public int getGenusNodeCount(){
+        if (getSizeofSubclasses() <= 0 || this.taxon.hierLevel.equalsIgnoreCase("GENUS")) {
+            return 1;
+        }
+        int genusNodeCount = 0;
+        Iterator i = subclasses.values().iterator();
+        while (i.hasNext()) {
+            genusNodeCount += ((RawHierarchyTree) i.next()).getGenusNodeCount();
+        }
+        return genusNodeCount;
+    }
+    
     public boolean isSingleton() {
         return (getLeaveCount() > 1) ? false : true;
     }
