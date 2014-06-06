@@ -20,12 +20,17 @@ There are many subcommands offered by the Classifier package. The default subcom
 java -Xmx1g -jar /path/to/classifier.jar
 USAGE: ClassifierMain <subcommand> <subcommand args ...>
 	classify      - classify one or multiple samples
-	libcompare    - compare two samples
-	merge         - merge multiple classification result files
-	train         - retrain classifier
-	loot          - leave-one-out accuracy testing
 	crossvalidate - cross validate accuracy testing
-	
+	libcompare    - compare two samples
+	loot          - leave one (sequence or taxon) out accuracy testing
+	merge-detail  - merge classification detail result files to create a taxon assignment counts file
+	merge-count   - merge multiple taxon assignment count files to into one count file
+	random-sample - random select a subset or subregion of sequences
+	rm-dupseq     - remove identical or any sequence contained by another sequence
+	rm-partialseq - remove partial sequences
+	taxa-sim      - calculate and plot the similarities within taxa
+	train         - retrain classifier
+
 	
 1. Classify one or more samples
   usage:  [options] <samplefile>[,idmappingfile] ...
@@ -88,43 +93,51 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
 
 
 3. Merge classification results
-	If you have classified samples at different time using the same training set, you can use this command to merge the classification results and	reproduce the hier_outfile with the assignment counts from all the samples from the input. Each input classification result is treated as one sample. Note taxon and rank filter options only affect the assignment output, not the hier_outfile.
+	If you have classified samples at different time using the same training set, you can use this command to merge the classification results and reproduce the hier_outfile with the assignment counts from all the samples from the input. Each input classification result is treated as one sample. Note taxon and rank filter options only affect the assignment output, not the hier_outfile.
 	
 	[Example command to merge two classification results]:
-	java -Xmx1g -jar /path/to/classifier.jar merge -h soil_hier.txt -o merged_classified.txt native_classified.txt,Native_1_4_A.ids usga_classified.txt
+	java -Xmx1g -jar /path/to/classifier.jar merge-detail -h soil_hier.txt -o merged_classified.txt native_classified.txt,Native_1_4_A.ids usga_classified.txt
 	
 	[Example command to merge two classification results, filter the classification output by confidence ]:
-	java -Xmx1g -jar /path/to/classifier.jar merge -h soil_hier.txt -o merged_classified.txt -f filterbyconf -c 0.5 native_classified.txt,Native_1_4_A.ids usga_classified.txt 
+	java -Xmx1g -jar /path/to/classifier.jar merge-detail -h soil_hier.txt -o merged_classified.txt -f filterbyconf -c 0.5 native_classified.txt,Native_1_4_A.ids usga_classified.txt 
 
 	[Example command to merge two classification results, only output classification results assigned to Alphaproteobacteria and confidence at family >= 0.5 ]:
 	create a file taxonFilter.txt containing Alphaproteobacteria.
-	java -Xmx1g -jar /path/to/classifier.jar merge -h soil_hier.txt -o merged_classified.txt -n taxonFilter.txt -c 0.5 -r family native_classified.txt,Native_1_4_A.ids usga_classified.txt 
+	java -Xmx1g -jar /path/to/classifier.jar merge-detail -h soil_hier.txt -o merged_classified.txt -n taxonFilter.txt -c 0.5 -r family native_classified.txt,Native_1_4_A.ids usga_classified.txt 
 
+4. Merge assignment count results
+    If you have classified samples at different time using the same training set, you can merger multiple assignment count results into one assignment count file, keeping one column for each unique sample. If same sample occurred more than once, the taxon counts for this sample will be combined. 
 
-4. Retrain the Classifier
+5. Retrain the Classifier
 	a. Follow these steps when there is a need to retrain Classifier, such as novel lineages, newly named type organisms, taxonomic rearrangements, better training set covering specific taxa, or alternative taxonomy. Two files, a taxonomy file and a training sequence file with lineage are required. Prefer high quality, full length sequences, or at least covering the entire region of gene of interest. See samplefiles for example data files. The 16S rRNA training data and Fungal LSU training data can be download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
 	Based on our experience, trimming the sequences to a specific region does not improve accuracy. The ranks are not required to be uniform neither, which means you can define any number of ranks as necessary. The speed of the Classifier is proportional to the number of genera, not the number of training sequences.
 	
-	b. Estimate the accuracy of your own training data using leave-one-out testing
+    b. Clean-up partial or duplicate training sequences to avoid inflated results in classification performance testing.
+    Use subcommand "rm-dupseq" to remove identical sequences or any sequence contained by another sequence. Use subcommand "rm-partialseq" to remove partial sequences based on pairwise alignment to near-full length reference sequences.
+
+    c. Plot intra taxon Similarity by fraction of matching 8-mer
+    Use subcommand "taxa-sim" to calculate and plot intra taxon Similarity by fraction of matching 8-mer (see example plots using fungal ITS training sets on RDP's poster http://rdp.cme.msu.edu/download/posters/MSA2014_RDP.pdf).
+
+	d. Estimate the accuracy of your own training data using leave-one-out testing
 	The program will output a tab-delimited test result file which can be loaded to Excel and plot the accuracy rates. It also contains the list of misclassified sequences and the rank when misclassified seqs group by taxon. Examine the result careful to spot errors in the taxonomy.
  
 	[Example command to do leave-one_out testing with length of 400]:
 	java -Xmx1g -jar /path/to/classifier.jar loot -q samplefiles/Armatimonadetes.fasta -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400 -o Armatimonadetes_400_test.txt 
 	
-	c. Cross validate testing
+	e. Cross validate testing
 	This comand performs a random sub-sampling validation. It calculate the values of (1-specificity) and sensitivity for each rank at each bootstrap cutoff.
 	
 	[Example command to do cross validation testing with length of 400]:	
 	java -Xmx1g -jar /path/to/classifier.jar crossvalidate -o crossvalidate_400.txt -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400
 	
-	d. Train classifer  
+	f. Train classifer  
 	If you are satisfied with the testing results, go ahead to train the classifier.
 	
 	[Example command to train classifier]:
 	java -Xmx1g -jar /path/to/classifier.jar train -o mytrained -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt
 	cp samplefiles/rRNAClassifier.properties mytrained/
 	
-	e. Classify sequences using the new model
+	g. Classify sequences using the new model
 	
 	[Example command to classify with the new model using "-t" option]:
 	java -Xmx1g -jar /path/to/classifier.jar classify -t mytrained/rRNAClassifier.properties -o Armatimonadetes_classified.txt samplefiles/Armatimonadetes.fasta 
