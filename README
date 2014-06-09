@@ -122,27 +122,32 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
     c. Plot intra taxon Similarity by fraction of matching 8-mer
     Use subcommand "taxa-sim" to calculate and plot intra taxon Similarity by fraction of matching 8-mer (see example plots using fungal ITS training sets on RDP's poster http://rdp.cme.msu.edu/download/posters/MSA2014_RDP.pdf).
 
-	d. Estimate the accuracy of your own training data using leave-one-out testing
+    d. Estimate the accuracy of your own training data using leave-one-out testing
 	The program will output a tab-delimited test result file which can be loaded to Excel and plot the accuracy rates. It also contains the list of misclassified sequences and the rank when misclassified seqs group by taxon. Examine the result careful to spot errors in the taxonomy.
  
-	[Example command to do leave-one_out testing with length of 400]:
-	java -Xmx1g -jar /path/to/classifier.jar loot -q samplefiles/Armatimonadetes.fasta -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400 -o Armatimonadetes_400_test.txt 
+    Leave-one-sequence-out testing: each iteration one sequence from the training set was chosen as a test sequence. That sequence was removed from training set. The assignment of the sequence produced by the Classifier was compared to the original taxonomy label to measure the accuracy of the Classifier.
+	[Example command with length of 400]:
+	java -Xmx1g -jar /path/to/classifier.jar loot -q samplefiles/Armatimonadetes.fasta -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400 -o Armatimonadetes_400_loso_test.txt 
 	
-	e. Cross validate testing
-	This comand performs a random sub-sampling validation. It calculate the values of (1-specificity) and sensitivity for each rank at each bootstrap cutoff.
+    Leave-one-taxon-out testing: similar to the leave-one-sequence-out testing except for each test sequence, the lowest taxon that sequence assigned to (either species or genus node) was removed from the training set. This is intended to test if the species or genus is no present in the training set, how likely the Classifier can assign the sequence to the correct genus or higher taxa.
+    [Example command ]:
+	java -Xmx1g -jar /path/to/classifier.jar loot -h -q samplefiles/Armatimonadetes.fasta -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -o Armatimonadetes_loto_test.txt 
 	
-	[Example command to do cross validation testing with length of 400]:	
-	java -Xmx1g -jar /path/to/classifier.jar crossvalidate -o crossvalidate_400.txt -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400
+    e. Cross validate testing
+    This comand performs a random sub-sampling validation. It calculate the values of (1-specificity) and sensitivity for each rank at each bootstrap cutoff.
 	
-	f. Train classifer  
-	If you are satisfied with the testing results, go ahead to train the classifier.
+    [Example command to do cross validation testing with length of 400]:	
+    java -Xmx1g -jar /path/to/classifier.jar crossvalidate -o crossvalidate_400.txt -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400
 	
-	[Example command to train classifier]:
-	java -Xmx1g -jar /path/to/classifier.jar train -o mytrained -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt
-	cp samplefiles/rRNAClassifier.properties mytrained/
+    f. Train classifer  
+    If you are satisfied with the testing results, go ahead to train the classifier.
 	
-	g. Classify sequences using the new model
+    [Example command to train classifier]:
+    java -Xmx1g -jar /path/to/classifier.jar train -o mytrained -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt
+    cp samplefiles/rRNAClassifier.properties mytrained/
 	
-	[Example command to classify with the new model using "-t" option]:
-	java -Xmx1g -jar /path/to/classifier.jar classify -t mytrained/rRNAClassifier.properties -o Armatimonadetes_classified.txt samplefiles/Armatimonadetes.fasta 
+    g. Classify sequences using the new model
+	
+    [Example command to classify with the new model using "-t" option]:
+    java -Xmx1g -jar /path/to/classifier.jar classify -t mytrained/rRNAClassifier.properties -o Armatimonadetes_classified.txt samplefiles/Armatimonadetes.fasta 
 	
