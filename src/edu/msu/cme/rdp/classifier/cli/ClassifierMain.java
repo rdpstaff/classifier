@@ -77,9 +77,9 @@ public class ClassifierMain {
             TaxaSimilarityMain.main(newArgs);
         } else if(cmd.equals("random-sample")) {
             ResampleSeqFile.main(newArgs);
-        } else if(cmd.equals("rm-dupseq ")) {
+        } else if(cmd.equals("rm-dupseq")) {
             RmDupSeqs.main(newArgs);
-        } else if(cmd.equals("rm-partialseq ")) {
+        } else if(cmd.equals("rm-partialseq")) {
             RmPartialSeqs.main(newArgs);
         } else if(cmd.equals("segment")) {
             MainMovingWindow.main(newArgs);

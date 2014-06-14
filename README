@@ -126,7 +126,7 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
 	The program will output a tab-delimited test result file which can be loaded to Excel and plot the accuracy rates. It also contains the list of misclassified sequences and the rank when misclassified seqs group by taxon. Examine the result careful to spot errors in the taxonomy.
  
     Leave-one-sequence-out testing: each iteration one sequence from the training set was chosen as a test sequence. That sequence was removed from training set. The assignment of the sequence produced by the Classifier was compared to the original taxonomy label to measure the accuracy of the Classifier.
-	[Example command with length of 400]:
+    [Example command with length of 400]:
 	java -Xmx1g -jar /path/to/classifier.jar loot -q samplefiles/Armatimonadetes.fasta -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -l 400 -o Armatimonadetes_400_loso_test.txt 
 	
     Leave-one-taxon-out testing: similar to the leave-one-sequence-out testing except for each test sequence, the lowest taxon that sequence assigned to (either species or genus node) was removed from the training set. This is intended to test if the species or genus is no present in the training set, how likely the Classifier can assign the sequence to the correct genus or higher taxa.
