@@ -39,6 +39,16 @@ public class LineageSequence extends Sequence {
     public List<String> getAncestors() {
         return ancestors;
     }
+    
+    public String getDesc(){
+        StringBuilder desc = new StringBuilder();
+        desc.append(ancestors.get(0));
+        for ( int i = 1; i < ancestors.size(); i++){
+            desc.append(";" + ancestors.get(i));
+        }
+        return desc.toString();
+    }
+    
   /* partial sequences with good words only
    */
   public GoodWordIterator getPartialSeqIteratorbyGoodBases(int num_good_bases) throws IOException{

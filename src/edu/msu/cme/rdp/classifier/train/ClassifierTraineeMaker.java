@@ -65,12 +65,9 @@ public class ClassifierTraineeMaker {
 
         try {
             TreeFactory factory = new TreeFactory(tax, trainset_no, version, modification);
-            long startTime = System.currentTimeMillis();
             LineageSequenceParser parser = new LineageSequenceParser(new File(seqFile));
-
-            while (parser.hasNext()) {
-                factory.addSequence(parser.next());
-            }
+            factory.parseSequenceFile(parser);
+            
             //after parsing all the sequences in training set, calculates the prior probability for each word
             factory.createGenusWordConditionalProb();
             if ( !(new File(outdir)).exists()){

@@ -146,6 +146,10 @@ public class TreeFactory {
      * oldest ancestor is the same as the previous root.
      */
     public HierarchyTree addSequence(LineageSequence pSeq) throws IOException {
+        return addSequence(pSeq, true);
+    }
+    
+    public HierarchyTree addSequence(LineageSequence pSeq, boolean initWordOccurrence) throws IOException {
 
         int size = pSeq.getAncestors().size();
         if (size == 0) {
@@ -168,7 +172,7 @@ public class TreeFactory {
             }
             // for the lowest level, count the word occurrence.
             if (i == size - 1) {
-                curTree.initWordOccurrence(pSeq, wordPriorArr);
+                curTree.initWordOccurrence(pSeq, wordPriorArr, initWordOccurrence);
                 curTree.increTotalSeqs();
                 totalSequences++;
                 if ( this.lowest_rank == null){

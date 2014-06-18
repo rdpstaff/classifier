@@ -41,13 +41,10 @@ public class TreeFactoryTest extends TestCase {
 
         TreeFactory factory = new TreeFactory(taxReader, 1, "version", "mod1");
 
-        InputStream inStream = System.class.getResourceAsStream("/test/classifier/testNBClassifierSet.fasta");
-
+        InputStream inStream = System.class.getResourceAsStream("/test/classifier/testNBClassifierSet.fasta");        
         LineageSequenceParser parser = new LineageSequenceParser(inStream);
-
-        while (parser.hasNext()) {
-            factory.addSequence((LineageSequence) parser.next());
-        }
+        factory.parseSequenceFile(parser);
+       
         //after all the training set is being parsed, calculate the prior probability for all the words.
 
         factory.createGenusWordConditionalProb();

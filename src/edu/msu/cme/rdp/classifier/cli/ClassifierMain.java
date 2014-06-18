@@ -21,6 +21,7 @@ import edu.msu.cme.rdp.alignment.errorcheck.RmPartialSeqs;
 import edu.msu.cme.rdp.classifier.comparison.ComparisonCmd;
 import edu.msu.cme.rdp.classifier.train.ClassifierTraineeMaker;
 import edu.msu.cme.rdp.classifier.train.validation.crossvalidate.CrossValidateMain;
+import edu.msu.cme.rdp.classifier.train.validation.distance.CompareTrainingSets;
 import edu.msu.cme.rdp.classifier.train.validation.leaveoneout.LeaveOneOutTesterMain;
 import edu.msu.cme.rdp.classifier.train.validation.movingwindow.MainMovingWindow;
 import edu.msu.cme.rdp.classifier.train.validation.distance.TaxaSimilarityMain;
@@ -41,6 +42,7 @@ public class ClassifierMain {
                 "\ndefault command is classify" +
                 "\n\tclassify      - classify one or multiple samples" +
                 "\n\tcrossvalidate - cross validate accuracy testing" + 
+                "\n\tcomp-trainset - compare multiple training sets to find shared and unique taxa and sequences" + 
                 "\n\tlibcompare    - compare two samples" +
                 "\n\tloot          - leave one (sequence or taxon) out accuracy testing" +
                 "\n\tmerge-detail  - merge classification detail result files to create a taxon assignment counts file" +
@@ -81,6 +83,8 @@ public class ClassifierMain {
             RmDupSeqs.main(newArgs);
         } else if(cmd.equals("rm-partialseq")) {
             RmPartialSeqs.main(newArgs);
+        } else if(cmd.equals("comp-trainset")) {
+            CompareTrainingSets.main(newArgs);
         } else if(cmd.equals("segment")) {
             MainMovingWindow.main(newArgs);
         } else if (cmd.startsWith("-") ){ // we need to keep the classify as the default command

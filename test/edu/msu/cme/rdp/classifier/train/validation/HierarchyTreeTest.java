@@ -45,13 +45,13 @@ public class HierarchyTreeTest extends TestCase {
         LineageSequenceParser parser = new LineageSequenceParser(in);
         // test the first sequence
         LineageSequence pSeq = parser.next();
-        c1.initWordOccurrence(pSeq, wordPriorArr);
+        c1.initWordOccurrence(pSeq, wordPriorArr, true);
 
         pSeq = parser.next();
-        c1.initWordOccurrence(pSeq, wordPriorArr);
+        c1.initWordOccurrence(pSeq, wordPriorArr, true);
 
         pSeq = parser.next();
-        c2.initWordOccurrence(pSeq, wordPriorArr);
+        c2.initWordOccurrence(pSeq, wordPriorArr, true);
 
         assertEquals(2, c1.getNumOfLeaves());
         assertEquals(1, c2.getNumOfLeaves());
@@ -103,13 +103,13 @@ public class HierarchyTreeTest extends TestCase {
         LineageSequenceParser parser = new LineageSequenceParser(in);
         // test the first sequence
         LineageSequence pSeq = parser.next();
-        c1.initWordOccurrence(pSeq, wordPriorArr);
+        c1.initWordOccurrence(pSeq, wordPriorArr, true);
 
         pSeq = parser.next();
-        c1.initWordOccurrence(pSeq, wordPriorArr);
+        c1.initWordOccurrence(pSeq, wordPriorArr, true);
 
         pSeq = parser.next();
-        c2.initWordOccurrence(pSeq, wordPriorArr);
+        c2.initWordOccurrence(pSeq, wordPriorArr, true);
 
         assertEquals(2, c1.getNumOfLeaves());
         assertEquals(1, c2.getNumOfLeaves());

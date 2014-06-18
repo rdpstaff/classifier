@@ -131,6 +131,7 @@ public class TaxaSimilarityMain {
         NuclSeqMatch sabCal = new NuclSeqMatch(trainSeqFile);
         LineageSequenceParser parser = new LineageSequenceParser(new File(testSeqFile));
 
+        int count = 0;
         while (parser.hasNext()) {
             LineageSequence seq = (LineageSequence) parser.next();
             HashMap<String,HierarchyTree> queryAncestorNodes = getAncestorNodes(factory.getRoot(), seq.getSeqName(), seq.getAncestors());
@@ -181,6 +182,10 @@ public class TaxaSimilarityMain {
                 diffLowestRankSabSet.add(diffLowestRankSab);
             }
             //System.out.println(seq.getSeqName() + "\t" + withinLowestRankSab + "\t" + diffLowestRankSab );
+            count++;
+            if ( count % 100 == 0){
+                System.out.println(count);
+            }
         }
         parser.close();
     
@@ -244,7 +249,9 @@ public class TaxaSimilarityMain {
         XYSeriesCollection dataset = new XYSeriesCollection();
         DefaultBoxAndWhiskerCategoryDataset scatterDataset = new DefaultBoxAndWhiskerCategoryDataset();
 
-        System.out.println("#\tkmer" + "\trank" + "\t" + "max" + "\t" + "avg" + "\t" + "min" + 
+        PrintStream boxchart_dataStream = new PrintStream(new File(outdir, plotTitle + "_boxchart.txt"));
+        
+        boxchart_dataStream.println("#\tkmer" + "\trank" + "\t" + "max" + "\t" + "avg" + "\t" + "min" + 
                 "\t" + "Q1" + "\t" + "median" + "\t" + "Q3" + "\t" + "98Pct" + "\t" + "2Pct" + "\t" + "comparisons");
         for ( int i = 0; i < ranks.size(); i++){
             int[] countArray = sabCoutMap.get(ranks.get(i));
@@ -307,11 +314,11 @@ public class TaxaSimilarityMain {
                 BoxAndWhiskerItem item = new BoxAndWhiskerItem(sum/comparisons, median, Q1, Q3, pct_2, pct_98,  minOutlier,  maxOutlier, new ArrayList());
                 scatterDataset.add(item, ranks.get(i), "");
                 
-                System.out.println("#\t" + GoodWordIterator.getWordsize() + "\t" + ranks.get(i) + "\t" + max + "\t" + format.format(sum/comparisons) + "\t" + min + 
+                boxchart_dataStream.println("#\t" + GoodWordIterator.getWordsize() + "\t" + ranks.get(i) + "\t" + max + "\t" + format.format(sum/comparisons) + "\t" + min + 
                 "\t" + Q1 + "\t" + median + "\t" + Q3 + "\t" + pct_98 + "\t" + pct_2 + "\t" + comparisons);
             }
         }  
-               
+        boxchart_dataStream.close();       
         Font lableFont = new Font("Helvetica", Font.BOLD, 30);
         
         JFreeChart chart = ChartFactory.createXYLineChart(plotTitle, "Similarity%", "Percent Comparisions",  dataset,  PlotOrientation.VERTICAL, true, true, false  );
@@ -352,12 +359,13 @@ public class TaxaSimilarityMain {
         
         if ( args.length != 7 ){
             System.err.println(usage);
-            return;
+            System.exit(1);
         }
         List<String> ranks = readRanks(args[5]);       
         File outdir = new File(args[3]);
         if ( !outdir.isDirectory()){
             System.err.println("outdir must be a directory");
+            System.exit(1);
         }
         int kmer = Integer.parseInt(args[4]);
         GoodWordIterator.setWordSize(kmer);        

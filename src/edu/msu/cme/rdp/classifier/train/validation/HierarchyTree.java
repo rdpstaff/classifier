@@ -104,12 +104,14 @@ public class HierarchyTree {
     /** This method initiate the word occurrence from the sequences for the
      * lowest level of the hierarchy tree
      */
-    public void initWordOccurrence(LineageSequence pSeq, float[] wordPriorArr) throws IOException {
+    public void initWordOccurrence(LineageSequence pSeq, float[] wordPriorArr, boolean initWordOccurrence) throws IOException {
         if (numOfLeaves < 0) {
             numOfLeaves = 1;
         } else {
             numOfLeaves++;
         }
+        
+        if ( !initWordOccurrence) return;
 
         GoodWordIterator iterator = new GoodWordIterator(pSeq.getSeqString());
         if (wordOccurrence == null) {

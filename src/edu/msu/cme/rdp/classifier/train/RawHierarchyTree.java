@@ -9,6 +9,7 @@ package edu.msu.cme.rdp.classifier.train;
 
 import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -233,5 +234,25 @@ public class RawHierarchyTree {
      */
     public int getGenusIndex() {
         return genusIndex;
+    }
+    
+    /** get all the lowest level nodes in given hierarchy level starting from the given root
+     */
+    public void getNodeMap(String level, HashMap<String, RawHierarchyTree> nodeMap) {
+
+        if (this.taxon.getHierLevel().equalsIgnoreCase(level)) {
+            nodeMap.put(this.name, this);
+            return;
+        }
+        //start from the root of the tree, get the subclasses.
+        Collection al = new ArrayList();
+
+        if ((al = this.getSubclasses()).isEmpty()) {
+            return;
+        }
+        Iterator i = al.iterator();
+        while (i.hasNext()) {
+            ((RawHierarchyTree) i.next()).getNodeMap(level, nodeMap);
+        }
     }
 }

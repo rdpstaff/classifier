@@ -8,8 +8,10 @@ package edu.msu.cme.rdp.classifier.train;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -139,12 +141,17 @@ public class TreeFactory {
         return buf.toString();
     }
 
-    void addSequence(LineageSequence pSeq) throws IOException {
-        if (pSeq.getAncestors().size() == 1) {  // only contains the taxid of the immediate taxon
-            addSequencewithTaxid(pSeq);
-        } else {
-            addSequencewithLineage(pSeq);
+   
+    public void parseSequenceFile(LineageSequenceParser parser) throws IOException {
+        while (parser.hasNext()) {
+            LineageSequence pSeq = parser.next();
+            if (pSeq.getAncestors().size() == 1) {  // only contains the taxid of the immediate taxon
+                addSequencewithTaxid(pSeq);
+            } else {
+                addSequencewithLineage(pSeq);
+            }
         }
+        parser.close();
     }
 
     /** For the given sequence name, its assigned taxid, and the sequence string, creates a
@@ -268,7 +275,7 @@ public class TreeFactory {
     }
 
     /** Gets the root of the tree */
-    RawHierarchyTree getRoot() {
+    public RawHierarchyTree getRoot() {
         return rootTree;
     }
 
