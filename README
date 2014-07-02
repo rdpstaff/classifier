@@ -7,6 +7,15 @@ How to cite Classifier? Wang, Q, G. M. Garrity, J. M. Tiedje, and J. R. Cole. 20
 Naive Bayesian Classifier for Rapid Assignment of rRNA Sequences into the New Bacterial Taxonomy. Appl Environ Microbiol. 73(16):5261-7.
 
 
+BIOM FORMAT
+
+The Classifier can now take an input minimal (or rich) dense BIOM file as input with an optional Metadata file, and produces a rich dense BIOM file. If an input cluster BIOM file ( version 1.0) is provided, the classification result of each sequence will replace the taxonomy of the corresponding cluster. If a metadata file is provided, the information will replace the metadata of the corresponding sample. The resulting rich dense BIOM file can be used by thirdparty tools such as phyloseq or QIIME etc.
+
+The BIOM file format is designed to be a general-use format for representing biological sample by observation contingency tables. BIOM is a recognized standard for the Earth Microbiome Project and is a Genomics Standards Consortium supported project.
+
+In order to use BIOM files as input, the format must be specified in the command line with "-f biom". Then, the biom file is specified with the command "-m /path/to/biom_file.biom". Including a Metadata file is optional and can be included by using the command "-d /path/to/metadata.txt".
+
+
 QUICKSTART
 
 ant jar
