@@ -249,7 +249,7 @@ public class TaxaSimilarityMain {
         XYSeriesCollection dataset = new XYSeriesCollection();
         DefaultBoxAndWhiskerCategoryDataset scatterDataset = new DefaultBoxAndWhiskerCategoryDataset();
 
-        PrintStream boxchart_dataStream = new PrintStream(new File(outdir, plotTitle + "_boxchart.txt"));
+        PrintStream boxchart_dataStream = new PrintStream(new File(outdir, plotTitle + ".boxchart.txt"));
         
         boxchart_dataStream.println("#\tkmer" + "\trank" + "\t" + "max" + "\t" + "avg" + "\t" + "min" + 
                 "\t" + "Q1" + "\t" + "median" + "\t" + "Q3" + "\t" + "98Pct" + "\t" + "2Pct" + "\t" + "comparisons");
@@ -266,7 +266,7 @@ public class TaxaSimilarityMain {
             int Q3 = -1;
             int pct_98 =-1;
             int pct_2 = -1;
-            int comparisons = 0;
+            long comparisons = 0;
             int minOutlier = 0;  // we don't care about the outliers
             int maxOutlier = 0;  //
             
@@ -319,7 +319,7 @@ public class TaxaSimilarityMain {
             }
         }  
         boxchart_dataStream.close();       
-        Font lableFont = new Font("Helvetica", Font.BOLD, 30);
+        Font lableFont = new Font("Helvetica", Font.BOLD, 28);
         
         JFreeChart chart = ChartFactory.createXYLineChart(plotTitle, "Similarity%", "Percent Comparisions",  dataset,  PlotOrientation.VERTICAL, true, true, false  );
         ((XYPlot) chart.getPlot()).getRenderer().setStroke( new BasicStroke( 2.0f ));
@@ -332,9 +332,9 @@ public class TaxaSimilarityMain {
         rangeAxis.setTickLabelFont(lableFont);
         rangeAxis.setLabelFont(lableFont);
         ((NumberAxis)rangeAxis).setTickUnit(new NumberTickUnit(5));
-        ChartUtilities.writeScaledChartAsPNG(new PrintStream(new File(outdir, plotTitle + "_linechart.png")), chart, 800, 1000, 3, 3);
+        ChartUtilities.writeScaledChartAsPNG(new PrintStream(new File(outdir, plotTitle + ".linechart.png")), chart, 800, 1000, 3, 3);
 
-        BoxPlotUtils.createBoxplot(scatterDataset, new PrintStream(new File(outdir, plotTitle + "_boxchart.png")), plotTitle, "Rank", "Similarity%", lableFont);
+        BoxPlotUtils.createBoxplot(scatterDataset, new PrintStream(new File(outdir, plotTitle + ".boxchart.png")), plotTitle, "Rank", "Similarity%", lableFont);
 
     }
     
@@ -378,7 +378,6 @@ public class TaxaSimilarityMain {
         }
         if ( args[6].equalsIgnoreCase("sab")){
             theObj.calSabSimilarity(args[0], args[1], args[2]);
-            plotTitle = kmer + "mer_" + plotTitle;
         }else {
             theObj.calPairwiseSimilaritye(args[0], args[1], args[2]);
         }

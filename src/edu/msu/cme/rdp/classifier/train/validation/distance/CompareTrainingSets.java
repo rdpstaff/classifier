@@ -21,13 +21,15 @@ import edu.msu.cme.rdp.classifier.train.LineageSequence;
 import edu.msu.cme.rdp.classifier.train.LineageSequenceParser;
 import edu.msu.cme.rdp.classifier.train.validation.HierarchyTree;
 import edu.msu.cme.rdp.classifier.train.validation.TreeFactory;
-import edu.msu.cme.rdp.readseq.readers.SequenceReader;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,14 +80,16 @@ public class CompareTrainingSets {
     }
     
     private HierarchyTreeExtend parseOneTraining(String taxFile, String seqFile, int trainset_no, String version, String modification) throws IOException{
-        Reader tax = new FileReader(taxFile);
         File temp = new File(taxFile);
         int index = temp.getName().indexOf(".");
         String trainsetName = temp.getName();
         if ( index != -1){
             trainsetName = trainsetName.substring(0, index);
         }
+        // need to use ISO encoding for UNITE
+        FileReader tax  = new FileReader(new File(taxFile));
         TreeFactory factory = new TreeFactory(tax);
+               
         LineageSequenceParser parser = new LineageSequenceParser(new File(seqFile));
         LineageSequence seq;
         HashMap<String, String> seqMap = new HashMap<String, String>(); // seqID, desc
@@ -93,11 +97,14 @@ public class CompareTrainingSets {
             seq = parser.next();
             factory.addSequence(seq, false); // donot check the kmers
             
-            if ( !seq.getSeqName().contains("|SH") ){               
-                seqMap.put(seq.getSeqName(), seq.getDesc()); 
-            }else {// if it's seq from UNITE, we need to do something with the seqID
+            if ( seq.getSeqName().contains("|S00") ){ // rdpID
                 String[] values = seq.getSeqName().split("\\|");
-                seqMap.put(values[1], seq.getDesc());    
+                seqMap.put(values[0], seq.getDesc());   
+            }else if (seq.getSeqName().contains("|SH") ){  // if it's seq from UNITE, we need to do something with the seqID             
+                String[] values = seq.getSeqName().split("\\|");
+                seqMap.put(values[1], seq.getDesc()); 
+            }else {
+                seqMap.put(seq.getSeqName(), seq.getDesc()); 
             }
             
         }

@@ -73,14 +73,10 @@ public class LeaveOneOutTesterMain {
     public LeaveOneOutTesterMain(String taxFile, String trainseqFile, String testFile, String outFile, 
             int numGoodBases, int min_bootstrap_words, boolean hideTaxon) throws IOException {
         boolean useSeed = true;  // use seed for random word selection
-        System.err.println("#before TreeFactory\tfree=" + Runtime.getRuntime().freeMemory()/1000000 + "\ttotal=" + Runtime.getRuntime().totalMemory()/1000000 );
 
         TreeFactory factory = new TreeFactory(new FileReader(taxFile));
         // create a tree
-        System.err.println("#before craeteTree\tfree=" + Runtime.getRuntime().freeMemory()/1000000 + "\ttotal=" + Runtime.getRuntime().totalMemory()/1000000 );
-
         createTree(factory, trainseqFile);
-        System.err.println("#after craeteTree\tfree=" + Runtime.getRuntime().freeMemory()/1000000 + "\ttotal=" + Runtime.getRuntime().totalMemory()/1000000 );
 
         BufferedWriter outWriter = new BufferedWriter(new FileWriter(outFile));
         LineageSequenceParser parser = new LineageSequenceParser(new File(testFile));

@@ -75,8 +75,8 @@ public class BoxPlotUtils {
             title = title.substring(0, index);
         }
           
-        Font lableFont = new Font("Helvetica", Font.BOLD, 30);
-        createBoxplot(scatterDataset, new PrintStream(new File(outdir, title + "_boxchart.png")), title, xAxisLabel, yAxisLabel, lableFont);
+        Font lableFont = new Font("Helvetica", Font.BOLD, 28);
+        createBoxplot(scatterDataset, new PrintStream(new File(outdir, title + ".boxchart.png")), title, xAxisLabel, yAxisLabel, lableFont);
        
     }
     

@@ -18,6 +18,8 @@ package edu.msu.cme.rdp.classifier.io;
 
 import edu.msu.cme.rdp.classifier.ClassificationResult;
 import edu.msu.cme.rdp.classifier.RankAssignment;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,26 +32,31 @@ public class ClassificationResultFormatter {
     // list of major rankd
 
     public static String[] RANKS = { "domain", "phylum", "class", "order", "family", "genus"};
+    public static String[] RANKS_WITHSPECIES = { "domain", "phylum", "class", "order", "family", "genus", "species"};
+    public static final List<ClassificationResultFormatter.FORMAT> fileFormats 
+            = new ArrayList(Arrays.asList(FORMAT.allRank,FORMAT.dbformat,FORMAT.fixRank,FORMAT.filterbyconf,FORMAT.biom));
 
     public enum FORMAT {
 
-        allRank, fixRank, dbformat, filterbyconf;
+        allRank, fixRank, dbformat, filterbyconf, biom;
     }
 
     public static String getOutput(ClassificationResult result, FORMAT format){
-        return getOutput(result, format, 0f);
+        return getOutput(result, format, 0f, RANKS);
     }
     
-    public static String getOutput(ClassificationResult result, FORMAT format, float conf) {
+    public static String getOutput(ClassificationResult result, FORMAT format, float conf, String[] ranks) {
         switch (format) {
             case allRank:
                 return getAllRankOutput(result);
             case fixRank:
-                return getFixRankOutput(result);
+                return getFixRankOutput(ranks, result);
             case dbformat:
                 return getDBOutput(result, conf);
             case filterbyconf:
-                return getFilterByConfOutput(result, conf);
+                return getFilterByConfOutput(ranks, result, conf);
+            case biom:
+                return getBiomOutput(ranks, result, conf, ';');
             default:
                 getAllRankOutput(result);
         }
@@ -131,39 +138,72 @@ public class ClassificationResultFormatter {
         for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
             rankMap.put(assignment.getRank().toLowerCase(), assignment);
         }
-        
         // if the score is missing for the rank, report the conf and name from the lower rank if above the conf
         // if the lower rank is below the conf, output unclassified node name and the conf from the one above the conf
-        RankAssignment prevAssign = null;
-        for (int i = ranks.length -1; i>=0; i--) {
+        RankAssignment prevAssign = result.getAssignments().get(0);
+        assignmentStr.append(result.getSequence().getSeqName());
+        for (int i = 0; i <= ranks.length -1; i++) {
             RankAssignment assign = rankMap.get(ranks[i]);
             if (assign != null) {
-                if ( assign.getConfidence() >= conf){
-                    if ( prevAssign != null && prevAssign.getConfidence() < conf){
-                        assignmentStr.insert(0, "\t" +  "unclassified_" + assign.getName() +"\t" + ranks[i+1] + "\t" + assign.getConfidence());
-                    }
-                    assignmentStr.insert(0, "\t" + assign.getName() +"\t" + assign.getRank() + "\t" + assign.getConfidence());
+                if ( assign.getConfidence() <= conf){
+                    assignmentStr.append("\t" + "unclassified_" + prevAssign.getName() );                   
+                }else {
+                    assignmentStr.append("\t" + assign.getName() );
+                    prevAssign = assign;
                 }
-                prevAssign = assign;
+                
             } else {
                 if ( prevAssign != null && prevAssign.getConfidence() >= conf){
-                    assignmentStr.insert(0, "\t" + prevAssign.getName() +"\t" + ranks[i] + "\t" + prevAssign.getConfidence());
+                    assignmentStr.append("\t" + "unclassified_" + prevAssign.getName()  );
                 }
             }
             
-        }
-        if (result.isReverse()) {
-            assignmentStr.insert(0,"-");
-        } else {
-            assignmentStr.insert(0, "");
-        }
-        assignmentStr.insert(0, result.getSequence().getSeqName() + "\t");
+        } 
         assignmentStr.append("\n");
-        
         return assignmentStr.toString();
 
     }
 
+    /**
+    * Output the classification result suitable to load into biom format. 
+    * Concatenate the rank and the taxon name, remove quotes in the taxon name
+    */
+    public static String getBiomOutput(String[] ranks, ClassificationResult result, float conf, char delimiter) {
+        StringBuilder assignmentStr = new StringBuilder();
+
+        HashMap<String, RankAssignment> rankMap = new HashMap<String, RankAssignment>();
+        for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
+            rankMap.put(assignment.getRank().toLowerCase(), assignment);
+        }
+        // if the score is missing for the rank, report the conf and name from the lower rank if above the conf
+        // if the lower rank is below the conf, output unclassified node name and the conf from the one above the conf
+        // remove the quotes in the name
+        RankAssignment prevAssign = result.getAssignments().get(0);
+        assignmentStr.append(result.getSequence().getSeqName() + "\t");
+        for (int i = 0; i <= ranks.length -1; i++) {
+            RankAssignment assign = rankMap.get(ranks[i]);
+            String rank = RANKS[i].substring(0,1).toLowerCase();
+            if (assign != null) {
+                if ( assign.getConfidence() <= conf){
+                    assignmentStr.append(rank + "__" + "unclassified_" + prevAssign.getName().replaceAll("\"", "") );                   
+                }else {
+                    assignmentStr.append( rank + "__"+ assign.getName().replaceAll("\"", "") );
+                    prevAssign = assign;
+                }
+                
+            } else {
+                if ( prevAssign != null && prevAssign.getConfidence() >= conf){
+                    assignmentStr.append( rank + "__" + "unclassified_" + prevAssign.getName().replaceAll("\"", "") );
+                }
+            }
+            
+            if ( i < ranks.length -1){
+                assignmentStr.append(delimiter);
+            }
+        } 
+        return assignmentStr.toString();
+
+    }
 
     public static String getDBOutput(ClassificationResult result, float conf) {
         StringBuilder assignmentStr = new StringBuilder();

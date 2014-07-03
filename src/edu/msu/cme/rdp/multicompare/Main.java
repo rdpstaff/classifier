@@ -60,6 +60,8 @@ public class Main {
         options.addOption(new Option(CmdOptions.BOOTSTRAP_SHORT_OPT, CmdOptions.BOOTSTRAP_LONG_OPT, true, CmdOptions.BOOTSTRAP_DESC));
         options.addOption(new Option(CmdOptions.BOOTSTRAP_OUTFILE_SHORT_OPT, CmdOptions.BOOTSTRAP_OUTFILE_LONG_OPT, true, CmdOptions.BOOTSTRAP_OUTFILE_DESC));
         options.addOption(new Option(CmdOptions.SHORTSEQ_OUTFILE_SHORT_OPT, CmdOptions.SHORTSEQ_OUTFILE_LONG_OPT, true, CmdOptions.SHORTSEQ_OUTFILE_DESC));
+        options.addOption(new Option(CmdOptions.BIOMFILE_SHORT_OPT, CmdOptions.BIOMFILE_LONG_OPT, true, CmdOptions.BIOMFILE_DESC));
+        options.addOption(new Option(CmdOptions.METADATA_SHORT_OPT, CmdOptions.METADATA_LONG_OPT, true, CmdOptions.METADATA_DESC));
     }
    
 
@@ -116,6 +118,8 @@ public class Main {
         PrintWriter assign_out = new PrintWriter(new NullWriter());
         PrintStream bootstrap_out = null;
         String propFile = null;
+        File biomFile = null;
+        File metadataFile = null;
         PrintWriter shortseq_out = null;
         List<MCSample> samples = new ArrayList();
         ClassificationResultFormatter.FORMAT format = ClassificationResultFormatter.FORMAT.allRank;
@@ -133,6 +137,12 @@ public class Main {
             } 
             if (line.hasOption(CmdOptions.HIER_OUTFILE_SHORT_OPT)) {
                 hier_out = new PrintStream(line.getOptionValue(CmdOptions.HIER_OUTFILE_SHORT_OPT));
+            }
+            if (line.hasOption(CmdOptions.BIOMFILE_SHORT_OPT)) {
+                biomFile = new File(line.getOptionValue(CmdOptions.BIOMFILE_SHORT_OPT));
+            }
+            if (line.hasOption(CmdOptions.METADATA_SHORT_OPT)) {
+                metadataFile = new File(line.getOptionValue(CmdOptions.METADATA_SHORT_OPT));
             }
 
             if (line.hasOption(CmdOptions.TRAINPROPFILE_SHORT_OPT)) {
@@ -152,8 +162,10 @@ public class Main {
                     format = ClassificationResultFormatter.FORMAT.filterbyconf;
                 } else if (f.equalsIgnoreCase("db")) {
                     format = ClassificationResultFormatter.FORMAT.dbformat;
+                } else if (f.equalsIgnoreCase("biom")) {
+                    format = ClassificationResultFormatter.FORMAT.biom;
                 }else {
-                    throw new IllegalArgumentException("Not valid output format, only allrank, fixrank, filterbyconf and db allowed");
+                    throw new IllegalArgumentException("Not an valid output format, only allrank, fixrank, biom, filterbyconf and db allowed");
                 }
             }
             if (line.hasOption(CmdOptions.GENE_SHORT_OPT)) {
@@ -162,8 +174,10 @@ public class Main {
                 }
                 gene = line.getOptionValue(CmdOptions.GENE_SHORT_OPT).toLowerCase();
 
-                if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)) {
-                    throw new IllegalArgumentException(gene + " is NOT valid, only allows " + ClassifierFactory.RRNA_16S_GENE + " and " + ClassifierFactory.FUNGALLSU_GENE);
+                if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)
+                    && !gene.equals(ClassifierFactory.FUNGALITS_warcup_GENE) && !gene.equals(ClassifierFactory.FUNGALITS_unite_GENE) ) {
+                    throw new IllegalArgumentException(gene + " not found, choose from" + ClassifierFactory.RRNA_16S_GENE + ", " 
+                     + ClassifierFactory.FUNGALLSU_GENE + ", " + ClassifierFactory.FUNGALITS_warcup_GENE  + ", " + ClassifierFactory.FUNGALITS_unite_GENE);
                 }
             }
             if (line.hasOption(CmdOptions.MIN_BOOTSTRAP_WORDS_SHORT_OPT)) {
@@ -190,6 +204,13 @@ public class Main {
             if (line.hasOption(CmdOptions.BOOTSTRAP_OUTFILE_SHORT_OPT)) {
                 bootstrap_out = new PrintStream(line.getOptionValue(CmdOptions.BOOTSTRAP_OUTFILE_SHORT_OPT));
             }
+            
+            if ( format.equals( ClassificationResultFormatter.FORMAT.biom) && biomFile == null){
+                throw new IllegalArgumentException("biom format requires an input biom file");
+            }
+            if ( biomFile != null ) {  // if input biom file provided, use biom format
+                format = ClassificationResultFormatter.FORMAT.biom;               
+            }
              
             args = line.getArgs();
             for ( String arg: args){
@@ -197,14 +218,12 @@ public class Main {
                 File inputFile = new File(inFileNames[0]);
                 File idmappingFile = null;
                 if (!inputFile.exists()) {
-                    System.err.println("Failed to find input file \"" + inFileNames[0] + "\"");
-                    return;
+                    throw new IllegalArgumentException("Failed to find input file \"" + inFileNames[0] + "\"");
                 }
                 if (inFileNames.length == 2) {
                     idmappingFile = new File(inFileNames[1]);
                     if (!idmappingFile.exists()) {
-                        System.err.println("Failed to find input file \"" + inFileNames[1] + "\"");
-                        return;
+                        throw new IllegalArgumentException("Failed to find input file \"" + inFileNames[1] + "\"");
                     }
                 }
 
@@ -222,8 +241,8 @@ public class Main {
             new HelpFormatter().printHelp(80, " [options] <samplefile>[,idmappingfile] ...", "", options, "");
             return;
         }
-                 
-        MultiClassifier multiClassifier = new MultiClassifier(propFile, gene);
+        
+        MultiClassifier multiClassifier = new MultiClassifier(propFile, gene, biomFile, metadataFile);
         MultiClassifierResult result = multiClassifier.multiCompare(samples, conf, assign_out, format, min_bootstrap_words);
         assign_out.close();
         if ( hier_out != null){

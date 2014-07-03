@@ -29,6 +29,8 @@ public class ClassifierFactory {
 
     public static final String RRNA_16S_GENE = "16srrna";
     public static final String FUNGALLSU_GENE = "fungallsu";
+    public static final String FUNGALITS_warcup_GENE = "fungalits_warcup";
+    public static final String FUNGALITS_unite_GENE = "fungalits_unite";
     private TrainingInfo trainingInfo;
     private static Properties urlProperties;
     private static String classifierVersion;

@@ -25,7 +25,12 @@ import edu.msu.cme.rdp.multicompare.taxon.MCTaxon;
 import edu.msu.cme.rdp.readseq.readers.Sequence;
 import edu.msu.cme.rdp.taxatree.ConcretRoot;
 import edu.msu.cme.rdp.taxatree.Taxon;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +49,9 @@ public class MultiClassifier {
     private static final float DEFAULT_CONF = 0.8f;
     private static final PrintWriter DEFAULT_ASSIGN_WRITER = new PrintWriter(new NullWriter());
     private static final ClassificationResultFormatter.FORMAT DEFAULT_FORMAT = ClassificationResultFormatter.FORMAT.allRank;
+    private File biomFile = null;
+    private HashMap<String, HashMap<String, String>> metadataMap = null;
+    private String[] ranks = ClassificationResultFormatter.RANKS; // default ranks;
 
     public MultiClassifier(String propfile, String gene){
 
@@ -55,8 +63,19 @@ public class MultiClassifier {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+        if ( gene.equalsIgnoreCase(ClassifierFactory.FUNGALITS_warcup_GENE) ){
+            ranks = ClassificationResultFormatter.RANKS_WITHSPECIES;
+        }
     }
 
+    public MultiClassifier(String propfile, String gene, File biomFile, File metadataFile) throws IOException{
+        this(propfile, gene);
+        this.biomFile = biomFile;
+        if ( metadataFile != null){
+            metadataMap = readMetaData(metadataFile);
+        }        
+    }
+    
     public MultiClassifierResult multiCompare(List<MCSample> samples) throws IOException {
         return multiCompare(samples, DEFAULT_CONF, DEFAULT_ASSIGN_WRITER, DEFAULT_FORMAT, Classifier.MIN_BOOTSTRSP_WORDS);
     }
@@ -84,13 +103,24 @@ public class MultiClassifier {
         Classifier classifier = classifierFactory.createClassifier();
         List<String> badSequences = new ArrayList();
         Map<String, Integer> seqCountMap = new HashMap();
+        Map<String, String> seqClassificationMap = new HashMap(); // holds the classification results to replace the biom metadata
+        if ( format.equals(ClassificationResultFormatter.FORMAT.filterbyconf) ){
+            for (int i = 0; i <= ranks.length -1; i++) {
+                assign_out.print("\t" + ranks[i]);
+            }
+            assign_out.println();
+        }
         for (MCSample sample : samples) {
             Sequence seq;
 
             while ((seq = sample.getNextSeq()) != null) {
                 try {
                     ClassificationResult result = classifier.classify(new ClassifierSequence(seq), min_bootstrap_words);
-                    printClassificationResult(result, assign_out, format, confidence);
+                    if ( !format.equals(ClassificationResultFormatter.FORMAT.biom)){
+                        printClassificationResult(result, assign_out, format, confidence);
+                    }else {
+                        seqClassificationMap.put(result.getSequence().getSeqName(), ClassificationResultFormatter.getOutput(result, format, confidence, ranks));
+                    }
                     processClassificationResult(result, sample, root, confidence, seqCountMap);
                     sample.addRankCount(result);
 
@@ -101,7 +131,106 @@ public class MultiClassifier {
             }
         }
 
+        if ( format.equals(ClassificationResultFormatter.FORMAT.biom)){
+            printBiom(assign_out, seqClassificationMap);
+        }
         return new MultiClassifierResult(root, samples, badSequences, seqCountMap);
+    }
+    
+    
+    private void printBiom(PrintWriter assign_out, Map<String, String> seqClassificationMap) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(biomFile)));
+        String line = null;
+        boolean replaceTaxonomy = false;
+        boolean replaceSampleMetadata = false;
+        boolean continueColumns = false;
+        while ( (line=reader.readLine())!= null){
+            if ( line.startsWith("\"rows")){
+                replaceTaxonomy = true;
+                assign_out.println(line);
+                continue;
+            }
+            if (line.startsWith("\"columns\"")){                
+                replaceTaxonomy = false;            
+                if ( metadataMap != null){                
+                    replaceSampleMetadata = true;
+                }
+                assign_out.println(line);
+                continue;
+            }
+            if (line.trim().startsWith("],")){
+                if ( continueColumns){ // finish printing the previous sample
+                    assign_out.println("");
+                }
+                replaceTaxonomy = false; 
+                replaceSampleMetadata = false;                
+            }
+            if (replaceTaxonomy) { // replace the taxonomy metadata    
+               
+                String[] values = line.split("\"");
+                String cluster_id = values[3];
+                String cluster_classification = seqClassificationMap.get(cluster_id);
+                if ( cluster_classification == null ){
+                    throw new IllegalArgumentException("Can not find the cluster_id " + cluster_id + " in the classification result of the input sequences");
+                }
+                String[] classification = cluster_classification.split("\\t");
+                assign_out.print("\t {\"id\" : \"" + cluster_id +"\", \"metadata\" : {\"taxonomy\":[");
+
+                assign_out.print( "\"" + classification[1] + "\"");
+
+                if ( line.endsWith(",")){
+                    assign_out.println( "]}},");
+                }else {
+                    assign_out.println( "]}}");
+                }
+                               
+            }else if (replaceSampleMetadata){  // replace the sample metadata
+                if ( line.trim().contains("{\"id\"")){
+                    if ( continueColumns){ // finish printing the previous sample
+                        assign_out.println(",");
+                    }
+                    String[] values = line.split("\"");
+                    HashMap<String, String> sampleMap = metadataMap.get( values[3]);
+                    if ( sampleMap== null){
+                        throw new IllegalArgumentException("Sample " +  values[3] + " does not have metadata in the metadata file.");
+                    }
+                    assign_out.println( values[0] + "\"" + values[1] + "\"" + values[2]+ "\"" + values[3] 
+                            + "\"" + values[4] + "\"" + values[5] +"\" : {");
+                    Object[] tempList = sampleMap.keySet().toArray();
+                    for ( int i = 0; i < tempList.length; i++){
+                        if ( i < tempList.length -1){
+                            assign_out.println("\t\t\"" + tempList[i] + "\":\"" + sampleMap.get(tempList[i]) + "\",");
+                        }else {
+                            assign_out.print("\t\t\"" + tempList[i] + "\":\"" + sampleMap.get(tempList[i]) + "\"}}");
+                        }
+                    }
+                    continueColumns = true;
+                }
+            }else {
+                assign_out.println(line);
+            }
+        }
+        
+        reader.close();
+    }
+    
+    private HashMap<String, HashMap<String, String>> readMetaData(File metadataFile) throws IOException{
+        BufferedReader reader = new BufferedReader(new FileReader (metadataFile));
+        String line = reader.readLine();        
+        String[] header = line.split("\\t");
+        HashMap<String, HashMap<String, String>> metadataMap = new HashMap<String, HashMap<String, String>>();
+                
+        while ( (line= reader.readLine())!= null){
+            String[] vals = line.split("\\t");
+            HashMap<String, String> sampleMap = new HashMap<String, String>();
+            metadataMap.put(vals[0].trim(), sampleMap);
+            for ( int i = 1; i < header.length; i++){
+                sampleMap.put(header[i], vals[i]);
+            }
+        }
+        
+        reader.close();
+        return metadataMap;
     }
 
     /**
@@ -174,10 +303,9 @@ public class MultiClassifier {
         return ret;
     }
 
-    private static void printClassificationResult(ClassificationResult result, PrintWriter assign_out, ClassificationResultFormatter.FORMAT format, float confidence) throws IOException {
-        String assignmentStr = ClassificationResultFormatter.getOutput(result, format, confidence);
+    private void printClassificationResult(ClassificationResult result, PrintWriter assign_out, ClassificationResultFormatter.FORMAT format, float confidence) throws IOException {
+        String assignmentStr = ClassificationResultFormatter.getOutput(result, format, confidence, ranks);
         assign_out.print(assignmentStr);
-
     }
 
     private void processClassificationResult(ClassificationResult result, MCSample sample, ConcretRoot<MCTaxon> root, float conf, Map<String, Integer> seqCountMap) {
