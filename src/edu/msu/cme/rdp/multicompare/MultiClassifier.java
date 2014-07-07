@@ -63,7 +63,7 @@ public class MultiClassifier {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        if ( gene.equalsIgnoreCase(ClassifierFactory.FUNGALITS_warcup_GENE) ){
+        if ( gene != null && gene.equalsIgnoreCase(ClassifierFactory.FUNGALITS_warcup_GENE) ){
             ranks = ClassificationResultFormatter.RANKS_WITHSPECIES;
         }
     }
