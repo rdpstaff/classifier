@@ -77,7 +77,7 @@ public class CmdOptions {
             + "\n filterbyconf: only outputs the results for major ranks as in fixrank, results below the confidence cutoff were bin to a higher rank unclassified_node"
             + "\n db: outputs the seqname, trainset_no, tax_id, conf.";
     public static final String GENE_DESC = ClassifierFactory.RRNA_16S_GENE + ", " + ClassifierFactory.FUNGALLSU_GENE 
-            +  ", " + ClassifierFactory.FUNGALITS_warcup_GENE //+ ", " + ClassifierFactory.FUNGALITS_unite_GENE
+            +  ", " + ClassifierFactory.FUNGALITS_warcup_GENE + ", " + ClassifierFactory.FUNGALITS_unite_GENE
             + ". Default is " + DEFAULT_GENE +  ". This option can be overwritten by -t option";
     public static final String MIN_WORDS_DESC = "minimum number of words for each bootstrap trial. Default(maximum) is 1/8 of the words of each sequence. Minimum is " + Classifier.MIN_BOOTSTRSP_WORDS ;
     public static final String HIER_OUTFILE_DESC = "tab-delimited output file containing the assignment count for each taxon in the hierarchical format. Default is null.";

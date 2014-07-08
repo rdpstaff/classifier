@@ -68,7 +68,7 @@ public class TaxaSimilarityMain {
     private ArrayList<Short> diffLowestRankSabSet = new ArrayList<Short>();
     private List<String> ranks = new ArrayList<String>();
     private DecimalFormat format = new DecimalFormat("#.###");
-    private HashMap<String, int[]> sabCoutMap = new HashMap<String, int[]>();  // key = rank, value, count of the sab scores
+    private HashMap<String, long[]> sabCoutMap = new HashMap<String, long[]>();  // key = rank, value, count of the sab scores
     private final int BINSIZE = 101;
     private ScoringMatrix scoringMatrix = ScoringMatrix.getDefaultNuclMatrix();
     private AlignmentMode mode = AlignmentMode.overlap_trim;
@@ -80,7 +80,7 @@ public class TaxaSimilarityMain {
             this.ranks.add(r.toLowerCase());
         }
         for ( String rank: ranks){
-            sabCoutMap.put(rank.toLowerCase(), new int[BINSIZE]);
+            sabCoutMap.put(rank.toLowerCase(), new long[BINSIZE]);
         }
         
     }
@@ -252,9 +252,9 @@ public class TaxaSimilarityMain {
         PrintStream boxchart_dataStream = new PrintStream(new File(outdir, plotTitle + ".boxchart.txt"));
         
         boxchart_dataStream.println("#\tkmer" + "\trank" + "\t" + "max" + "\t" + "avg" + "\t" + "min" + 
-                "\t" + "Q1" + "\t" + "median" + "\t" + "Q3" + "\t" + "98Pct" + "\t" + "2Pct" + "\t" + "comparisons");
+                "\t" + "Q1" + "\t" + "median" + "\t" + "Q3" + "\t" + "98Pct" + "\t" + "2Pct" + "\t" + "comparisons" + "\t" + "sum");
         for ( int i = 0; i < ranks.size(); i++){
-            int[] countArray = sabCoutMap.get(ranks.get(i));
+            long[] countArray = sabCoutMap.get(ranks.get(i));
             if ( countArray == null) continue;
             
             double sum = 0.0;
@@ -315,7 +315,7 @@ public class TaxaSimilarityMain {
                 scatterDataset.add(item, ranks.get(i), "");
                 
                 boxchart_dataStream.println("#\t" + GoodWordIterator.getWordsize() + "\t" + ranks.get(i) + "\t" + max + "\t" + format.format(sum/comparisons) + "\t" + min + 
-                "\t" + Q1 + "\t" + median + "\t" + Q3 + "\t" + pct_98 + "\t" + pct_2 + "\t" + comparisons);
+                "\t" + Q1 + "\t" + median + "\t" + Q3 + "\t" + pct_98 + "\t" + pct_2 + "\t" + comparisons + "\t" + sum);
             }
         }  
         boxchart_dataStream.close();       
