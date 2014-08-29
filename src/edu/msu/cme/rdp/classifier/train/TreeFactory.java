@@ -414,7 +414,8 @@ public class TreeFactory {
     private void displayTrainingTree(RawHierarchyTree root) throws IOException {
         Taxonomy taxon = ((Taxonomy) root.getTaxonomy());
 
-        treeFile.write("<TreeNode name=\"" + root.getName().replaceAll("\"", "&quot;").replaceAll("&", "") + "\" taxid=\""
+        // need to remove the & sign in the taxon names
+        treeFile.write("<TreeNode name=\"" + root.getName().replaceAll("&", "").replaceAll("\"", "&quot;") + "\" taxid=\""
                 + taxon.taxID + "\" rank=\"" + taxon.hierLevel + "\" parentTaxid=\""
                 + taxon.parentID + "\" leaveCount=\""
                 + root.getLeaveCount() + "\" genusIndex=\"" + root.getGenusIndex()
