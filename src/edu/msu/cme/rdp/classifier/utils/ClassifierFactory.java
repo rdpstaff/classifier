@@ -213,4 +213,8 @@ public class ClassifierFactory {
     public HierarchyTree getRoot() {
         return trainingInfo.getRootTree();
     }
+    
+    public String getTrainRank(){
+        return trainingInfo.getTrainRank();
+    }
 }

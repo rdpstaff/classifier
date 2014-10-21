@@ -80,6 +80,7 @@ public class Reprocess {
         PrintWriter assign_out = new PrintWriter(new NullWriter());
         float conf = 0.8f;
         PrintStream heir_out = null;
+        String hier_out_filename = null;
         ClassificationResultFormatter.FORMAT format = ClassificationResultFormatter.FORMAT.allRank;
         String rank = null;
         String taxonFilterFile = null;
@@ -90,7 +91,8 @@ public class Reprocess {
         try {
             CommandLine line = new PosixParser().parse(options, args);
             if (line.hasOption(CmdOptions.HIER_OUTFILE_SHORT_OPT) ) {
-                heir_out = new PrintStream(line.getOptionValue(CmdOptions.HIER_OUTFILE_SHORT_OPT));                
+                hier_out_filename = line.getOptionValue(CmdOptions.HIER_OUTFILE_SHORT_OPT);
+                heir_out = new PrintStream(hier_out_filename);                
             } else {
                 throw new Exception("It make sense to provide output filename for " + CmdOptions.HIER_OUTFILE_LONG_OPT);
             }
@@ -139,7 +141,8 @@ public class Reprocess {
                 gene = line.getOptionValue(CmdOptions.GENE_SHORT_OPT).toLowerCase();
 
                 if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)) {
-                    throw new IllegalArgumentException(gene + " is NOT valid, only allows " + ClassifierFactory.RRNA_16S_GENE + " and " + ClassifierFactory.FUNGALLSU_GENE);
+                    throw new IllegalArgumentException(gene + " is NOT valid, only allows " + ClassifierFactory.RRNA_16S_GENE
+                     + ", " + ClassifierFactory.FUNGALLSU_GENE + ", " + ClassifierFactory.FUNGALITS_warcup_GENE + " and " + ClassifierFactory.FUNGALITS_unite_GENE);
                 }
             }
             args = line.getArgs();
@@ -187,6 +190,14 @@ public class Reprocess {
 
         assign_out.close();
         heir_out.close();
+        if ( multiClassifier.hasCopyNumber()){
+            // print copy number corrected counts
+            File cn_corrected_s =  new File (new File(hier_out_filename).getParentFile(), "cncorrected_" + hier_out_filename);
+            PrintStream cn_corrected_hier_out = new PrintStream(cn_corrected_s);
+            printVisitor = new DefaultPrintVisitor(cn_corrected_hier_out, samples, true);
+            result.getRoot().topDownVisit(printVisitor);
+            cn_corrected_hier_out.close();
+        }
         
     }
 }

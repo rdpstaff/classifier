@@ -51,22 +51,27 @@ public class UnifracTaxon extends MCTaxon {
     }
 
     public boolean containsSample(MCSample sample) {
-        return sampleCountMap.containsKey(sample) && sampleCountMap.get(sample) > 0;
+        return sampleCountMap.containsKey(sample) && sampleCountMap.get(sample)[0] > 0;
     }
 
     public void resetSamples() {
         sampleCountMap.clear();
     }
 
-    public void setSampleCount(MCSample sample, int count) {
-        sampleCountMap.put(sample, count);
+    public void setSampleCount(MCSample sample, double count) {
+        double[] d = new double[Count_Array_size];
+        d[0] = count;
+        sampleCountMap.put(sample, d);
     }
 
-    public void addSampleCount(MCSample sample, int count) {
-        if(!sampleCountMap.containsKey(sample))
-            sampleCountMap.put(sample, 0);
-
-        sampleCountMap.put(sample, sampleCountMap.get(sample) + count);
+    public void addSampleCount(MCSample sample, double count) {
+        double[] d = sampleCountMap.get(sample);
+        if( d == null){
+            d = new double[Count_Array_size];
+            sampleCountMap.put(sample, d);
+        }
+        d[0] += count;
+        
     }
 
     public void resetSamples(List<UnifracSample> samplePool) {

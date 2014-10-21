@@ -31,9 +31,14 @@ public class TreeFileParser extends org.xml.sax.helpers.DefaultHandler {
 
     private Stack treeNodeStack = new Stack();
     private HierarchyTree root;
+    private String trainRank = null;
 
     /** Creates a new instance of TreeFileParser. */
     public TreeFileParser() {
+    }
+    
+    public String getTrainRank(){
+        return trainRank;
     }
 
     /** Reads from a reader that contains the information for each treenode.
@@ -86,16 +91,21 @@ public class TreeFileParser extends org.xml.sax.helpers.DefaultHandler {
             String qName, // qualified name
             Attributes attrs) throws SAXException {
         try {
-            if (attrs == null || attrs.getLength() != 6) {
+            // the older training file does not contain the copy number info.
+            if (attrs == null || (attrs.getLength() != 6 && attrs.getLength() != 7)) {
                 throw new TrainingDataException("Error: the attribute for element: "
-                        + qName + " is missing or do not have exactly 6 attributes");
+                        + qName + " is missing or do not have exactly number of attributes");
             }
             int taxid = Integer.parseInt(attrs.getValue(1));
             int parentTaxid = Integer.parseInt(attrs.getValue(3));
             int leaveCount = Integer.parseInt(attrs.getValue(4));
             int genusIndex = Integer.parseInt(attrs.getValue(5));
+            double copyNumber = 0.0f;  
+            if ( attrs.getLength() > 6){
+                copyNumber = Double.parseDouble(attrs.getValue(6));
+            }
 
-            HierarchyTree aTree = new HierarchyTree(attrs.getValue(0), taxid, attrs.getValue(2), leaveCount, genusIndex);
+            HierarchyTree aTree = new HierarchyTree(attrs.getValue(0), taxid, attrs.getValue(2), leaveCount, genusIndex, copyNumber);
             // The first TreeNode is the root
             if (root == null) {
                 aTree.addParent(null);
@@ -122,6 +132,8 @@ public class TreeFileParser extends org.xml.sax.helpers.DefaultHandler {
             // if this node is not genus node, push it to the stack
             if (genusIndex == -1) {
                 treeNodeStack.push(aTree);
+            }else if ( trainRank == null){
+                trainRank = attrs.getValue(2);
             }
         } catch (TrainingDataException e) {
             throw new SAXException(e);

@@ -32,10 +32,11 @@ import java.util.Set;
  */
 public class MCTaxon extends Taxon {
   
-    protected Map<MCSample, Integer> sampleCountMap = new LinkedHashMap();
+    protected Map<MCSample, double[]> sampleCountMap = new LinkedHashMap(); // the first count is the original count, the second count are copy number adjusted
     private Set<String> sequences = new HashSet();
     private String lineage;
-
+    public static final int Count_Array_size = 2;
+    
     public MCTaxon(int id, String name, String rank) {
         this(id, name, rank, false);
     }
@@ -68,18 +69,37 @@ public class MCTaxon extends Taxon {
         return sampleCountMap.keySet();
     }
 
-    public int getCount(MCSample s) {
+    public double getCount(MCSample s) {
         if(sampleCountMap.containsKey(s))
-            return sampleCountMap.get(s);
+            return sampleCountMap.get(s)[0];
         else
-            return 0;
+            return 0.0;
     }
+    
+    public double getCopyCorrectedCount(MCSample s) {
+        if(sampleCountMap.containsKey(s))
+            return sampleCountMap.get(s)[1];
+        else
+            return 0.0;
+    }
+        
 
-    public void incCount(MCSample s, int c ) {
-        Integer i = sampleCountMap.get(s);
-        if(i == null)
-            i = 0;
+    public void incCount(MCSample s, double c ) {
+        incCount(s, c, 1);
+    }
+    
+    /*
+    * Need to correct the count by copy number
+    */
+    public void incCount(MCSample s, double c, double copyNumber) {
+        double[] i = sampleCountMap.get(s);
+        if(i == null){
+            i = new double[Count_Array_size];
+            sampleCountMap.put(s, i );
+        }
 
-        sampleCountMap.put(s, i + c);
+        i[0] = i[0] + c ;
+        i[1] = i[1] + c/copyNumber;
+        
     }
 }

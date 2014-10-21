@@ -47,6 +47,10 @@ public class Classifier {
         accumulateProbArr = new float[nodeListSize];
     }
 
+    public String getTrainRank(){
+        return trainingInfo.getTrainRank();
+    }
+    
     /**Takes a query sequence, returns the classification result.
      * For each query sequence, first assign it to a genus node using all the words for calculation.
      * Then randomly chooses one-eighth of the all overlapping words in the query

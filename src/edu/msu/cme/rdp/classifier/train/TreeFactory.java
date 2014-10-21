@@ -28,7 +28,8 @@ import java.util.StringTokenizer;
  */
 public class TreeFactory {
 
-    private List genusNodeList = new ArrayList();   // list of all the genus nodes
+    private static String dformat = "%1$.2f";
+    private List genusNodeList = null;   // list of all the nodes at the trained rank, default is genus
     private List genus_wordConditionalProbList = new ArrayList(); // list of word
     //conditional probability and the corresponding genus node index,
     //starting from word 0 to word 65535.
@@ -153,6 +154,45 @@ public class TreeFactory {
         }
         parser.close();
     }
+    
+    /**
+     * parse the copy number file
+     * first step, take the copy number info from the lowest rank taxa, then calculate the copy number of the parent taxa based on the immediate children
+     * second step, for any taxon without copy number info, uses the 
+     * @param cnFile
+     * @throws IOException 
+     */
+    public void parseCopyNumberFile(String cnFile) throws IOException {
+         HashMap<String, CopyNumberParser.TaxonCopyNumber> cnMap = new CopyNumberParser().parse(cnFile);
+         this.getGenusNodeList();
+         for (int index = 0; index < genusNodeList.size(); index++) {
+                RawHierarchyTree aTree = ((RawHierarchyTree) genusNodeList.get(index));
+                String key = (aTree.getName() + aTree.getTaxonomy().getHierLevel()).toLowerCase();
+                CopyNumberParser.TaxonCopyNumber cn = cnMap.get(key);
+                if ( cn != null){
+                    aTree.setCopyNumber(cn.getCopyNumber());
+                    cnMap.remove(key);
+                }
+         }
+         // need to throw errors for lowest level taxon not found in the tree, might be spelling error or something
+         StringBuilder msg = new StringBuilder();
+         for ( CopyNumberParser.TaxonCopyNumber cn: cnMap.values()){
+             if ( !cn.rank.equalsIgnoreCase(this.trained_rank)) continue;
+             msg.append(cn.name).append("\n");
+         }
+         if (msg.length() > 0){
+             throw new IllegalArgumentException("Error: The following taxon names at rank " + this.trained_rank + " in the copynumber file are not found in the input taxonomy file\n" + msg);
+         }         
+         // fill the copy number for the ancestor taxa of the lowest level taxa
+         bottomUpSetCopyNumber(this.rootTree);
+         
+         //fill the copy number for the taxa not in the copy number files
+         if ( this.rootTree.hasCopyNumber()){
+            topDownFillCopyNumber(this.rootTree);
+         } else {
+             throw new IllegalArgumentException("Error: Problem setting copy number, no taxon at rank " + this.trained_rank + " found in the copynumber file");
+         }
+    }
 
     /** For the given sequence name, its assigned taxid, and the sequence string, creates a
      * HierarchyTree for each ancestor,
@@ -238,7 +278,6 @@ public class TreeFactory {
                     throw new IllegalArgumentException("Sequence " + pSeq.getSeqName()
                             + " has different lowest rank: " + curTree.getTaxonomy().getHierLevel() + " from the previous lowest rank: " + this.trained_rank);
                 }
-                //System.err.println(">" + pSeq.name + "\t" + curTree.getTaxonomy().getTaxID() +"\n" + pSeq.getSequence() );
             }
         }
     }
@@ -285,11 +324,9 @@ public class TreeFactory {
      *    non-zero occurrence genus, and keeps the value in an array.
      */
     void createGenusWordConditionalProb() {
-        System.err.println("trained rank = " + this.trained_rank);
-        createNodeList(this.getRoot(), this.trained_rank, genusNodeList);
-
+        getGenusNodeList();
         if (genusNodeList.isEmpty()) {
-            throw new IllegalArgumentException("\nThere is no node in GENUS level!");
+            throw new IllegalArgumentException("\nThere is no node at " + this.trained_rank);
         }
         int maxNumOfLeaves = 0;
 
@@ -343,6 +380,13 @@ public class TreeFactory {
      * Return the list of geneus nodes.
      */
     List getGenusNodeList() {
+        if (this.trained_rank == null) {
+            throw new IllegalArgumentException("Need to read a sequence file to set the rank to train on");
+        }
+        if ( genusNodeList != null) return genusNodeList;      
+        
+        genusNodeList = new ArrayList();        
+        createNodeList(this.getRoot(), this.trained_rank, genusNodeList);
         return genusNodeList;
     }
 
@@ -367,7 +411,7 @@ public class TreeFactory {
         return wordProbPointerArr[wordIndex + 1];
     }
 
-    /** Returns a GenusWordConditionalProb from the array given the postion.
+    /** Returns a GenusWordConditionalProb from the array given the position.
      */
     RawGenusWordConditionalProb getWordConditionalProb(int posIndex) {
         return (RawGenusWordConditionalProb) genus_wordConditionalProbList.get(posIndex);
@@ -375,20 +419,20 @@ public class TreeFactory {
 
     /** Gets all the lowest level nodes in given hierarchy level starting from the given root.
      */
-    void createNodeList(RawHierarchyTree root, String level, List nodeList) {
-        if (root == null) {
+    void createNodeList(RawHierarchyTree node, String level, List nodeList) {
+        if (node == null) {
             return;
         }
 
-        if (((Taxonomy) root.getTaxonomy()).hierLevel.equalsIgnoreCase(level)) {
-            nodeList.add(root);
-            root.setGenusIndex(nodeList.size() - 1);
+        if (((Taxonomy) node.getTaxonomy()).hierLevel.equalsIgnoreCase(level)) {
+            nodeList.add(node);
+            node.setGenusIndex(nodeList.size() - 1);
             return;
         }
         //start from the root of the tree, get the subclasses.
         Collection al = new ArrayList();
 
-        if ((al = root.getSubclasses()).isEmpty()) {
+        if ((al = node.getSubclasses()).isEmpty()) {
             return;
         }
         Iterator i = al.iterator();
@@ -397,8 +441,48 @@ public class TreeFactory {
         }
     }
 
+   
+    /** calculate the copy number from the children for the ancestor node
+     */
+    void bottomUpSetCopyNumber(RawHierarchyTree node) {
+        if ( node.getTaxonomy().hierLevel.equals(this.trained_rank)) return;
+        //start from the root of the tree, get the subclasses.
+        Collection<RawHierarchyTree> al = node.getSubclasses();
+        if (al.isEmpty())  return;
+       
+        Iterator i = al.iterator();
+        while (i.hasNext()) {
+            bottomUpSetCopyNumber((RawHierarchyTree) i.next());
+        }
+        float sum = 0f;
+        int childwithcn = 0;
+        for (RawHierarchyTree c: al){
+            if ( c.hasCopyNumber()){
+                sum += c.getCopyNumber();
+                childwithcn ++;
+            }
+        }
+        node.setCopyNumber(sum/childwithcn);
+    }
+    
+     /** For any node that does not have children with copy number info, copy the one from its parent.
+     */
+    void topDownFillCopyNumber(RawHierarchyTree node) {
+        if ( !node.hasCopyNumber()){
+            node.setCopyNumber(node.getParent().getCopyNumber());
+        }
+        //start from the root of the tree, get the subclasses.
+        Collection<RawHierarchyTree> al = node.getSubclasses();
+        if (al.isEmpty())     return;
+       
+        Iterator i = al.iterator();
+        while (i.hasNext()) {
+            topDownFillCopyNumber((RawHierarchyTree) i.next());
+        }
+    }
+    
     /**
-     * Writes the entire phylogenetic taxonmic information to a file. 
+     * Writes the entire phylogenetic taxonomic information to a file. 
      */
     void printTrainingFiles(String outdir) throws IOException {
         treeFile = new BufferedWriter(new FileWriter(outdir + "bergeyTrainingTree.xml"));
@@ -418,8 +502,11 @@ public class TreeFactory {
         treeFile.write("<TreeNode name=\"" + root.getName().replaceAll("&", "").replaceAll("\"", "&quot;") + "\" taxid=\""
                 + taxon.taxID + "\" rank=\"" + taxon.hierLevel + "\" parentTaxid=\""
                 + taxon.parentID + "\" leaveCount=\""
-                + root.getLeaveCount() + "\" genusIndex=\"" + root.getGenusIndex()
-                + "\"></TreeNode>\n");
+                + root.getLeaveCount() + "\" genusIndex=\"" + root.getGenusIndex() + "\"");
+        if (rootTree.hasCopyNumber()){
+            treeFile.write(" cpNumber=\"" + String.format(dformat, root.getCopyNumber()) + "\"");
+        }        
+        treeFile.write("></TreeNode>\n");
 
         Iterator i = root.getSubclasses().iterator();
 

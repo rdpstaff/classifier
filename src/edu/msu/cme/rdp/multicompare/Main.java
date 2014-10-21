@@ -114,9 +114,10 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
-        PrintStream hier_out = null;
+        PrintStream hier_out = null;        
         PrintWriter assign_out = new PrintWriter(new NullWriter());
         PrintStream bootstrap_out = null;
+        String hier_out_filename = null;
         String propFile = null;
         File biomFile = null;
         File metadataFile = null;
@@ -136,7 +137,8 @@ public class Main {
                 throw new IllegalArgumentException("Require the output file for classification assignment" );
             } 
             if (line.hasOption(CmdOptions.HIER_OUTFILE_SHORT_OPT)) {
-                hier_out = new PrintStream(line.getOptionValue(CmdOptions.HIER_OUTFILE_SHORT_OPT));
+                hier_out_filename = line.getOptionValue(CmdOptions.HIER_OUTFILE_SHORT_OPT);
+                hier_out = new PrintStream(hier_out_filename);
             }
             if (line.hasOption(CmdOptions.BIOMFILE_SHORT_OPT)) {
                 biomFile = new File(line.getOptionValue(CmdOptions.BIOMFILE_SHORT_OPT));
@@ -249,6 +251,14 @@ public class Main {
             DefaultPrintVisitor printVisitor = new DefaultPrintVisitor(hier_out, samples);
             result.getRoot().topDownVisit(printVisitor);
             hier_out.close();
+            if ( multiClassifier.hasCopyNumber()){
+                // print copy number corrected counts
+                File cn_corrected_s =  new File (new File(hier_out_filename).getParentFile(), "cnajusted_" + hier_out_filename);
+                PrintStream cn_corrected_hier_out = new PrintStream(cn_corrected_s);
+                printVisitor = new DefaultPrintVisitor(cn_corrected_hier_out, samples, true);
+                result.getRoot().topDownVisit(printVisitor);
+                cn_corrected_hier_out.close();
+            }
         }
         
         if ( bootstrap_out != null){

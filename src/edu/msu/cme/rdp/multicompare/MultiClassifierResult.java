@@ -33,14 +33,14 @@ public class MultiClassifierResult {
     private ConcretRoot<MCTaxon> root;
     private List<MCSample> samples = new ArrayList<MCSample>();
     private List<String> badSequences;
-    private Map<String, Integer> seqCountMap;
+    private Map<String, Long> seqCountMap;
     private HashMap<String, MCSample> sampleMap = new HashMap<String, MCSample>(); // for easy search
 
     public MultiClassifierResult(ConcretRoot root){
         this.root = root;
     }
     
-    public MultiClassifierResult(ConcretRoot root, List<MCSample> samples, List<String> badSequences, Map<String, Integer> seqCountMap) {
+    public MultiClassifierResult(ConcretRoot root, List<MCSample> samples, List<String> badSequences, Map<String, Long> seqCountMap) {
         this.root = root;
         this.samples = samples;
         this.badSequences = badSequences;
@@ -59,7 +59,7 @@ public class MultiClassifierResult {
         return badSequences;
     }
 
-    public Map<String, Integer> getSeqCountMap() {
+    public Map<String, Long> getSeqCountMap() {
         return seqCountMap;
     }
     

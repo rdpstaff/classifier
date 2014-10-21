@@ -8,12 +8,6 @@
  */
 package edu.msu.cme.rdp.classifier.train;
 
-import edu.msu.cme.rdp.classifier.cli.CmdOptions;
-import static edu.msu.cme.rdp.classifier.comparison.ComparisonCmd.COMPARE_OUTFILE_SHORT_OPT;
-import static edu.msu.cme.rdp.classifier.comparison.ComparisonCmd.QUERYFILE1_SHORT_OPT;
-import static edu.msu.cme.rdp.classifier.comparison.ComparisonCmd.QUERYFILE2_SHORT_OPT;
-import edu.msu.cme.rdp.classifier.io.ClassificationResultFormatter;
-import edu.msu.cme.rdp.classifier.utils.ClassifierFactory;
 import java.io.*;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -42,6 +36,8 @@ public class ClassifierTraineeMaker {
         options.addOption(new Option("v", "version", true, "the version of the hierarchical taxonomy"));
         options.addOption(new Option("m", "mod", true, "the modifcation information of the taxonomy"));
         options.addOption(new Option("o", "out_dir", true, "the output directory"));
+        options.addOption(new Option("c", "copynumber_file", true, "contains at least name, rank and the mean copy number of taxa. A header line is required to find the corresponding columns"
+                + "\nOnly the copy number of the lowest rank taxa will be loaded and the copy number of the other taxa are derived from these.")) ;
     }
 
     /** Creates a new ClassifierTraineeMaker 
@@ -60,14 +56,16 @@ public class ClassifierTraineeMaker {
      * @param outdir specifies the output directory.
      * The parsed training information will be saved into four files in the given output directory.
      */
-    public ClassifierTraineeMaker(String taxFile, String seqFile, int trainset_no, String version, String modification, String outdir) throws FileNotFoundException, IOException {
+    public ClassifierTraineeMaker(String taxFile, String seqFile, String cnFile, int trainset_no, String version, String modification, String outdir) throws FileNotFoundException, IOException {
         Reader tax = new FileReader(taxFile);
 
         try {
             TreeFactory factory = new TreeFactory(tax, trainset_no, version, modification);
             LineageSequenceParser parser = new LineageSequenceParser(new File(seqFile));
             factory.parseSequenceFile(parser);
-            
+            if ( cnFile != null){
+                factory.parseCopyNumberFile(cnFile);
+            }
             //after parsing all the sequences in training set, calculates the prior probability for each word
             factory.createGenusWordConditionalProb();
             if ( !(new File(outdir)).exists()){
@@ -120,6 +118,7 @@ public class ClassifierTraineeMaker {
     public static void main(String[] args) throws FileNotFoundException,
             IOException {
         String taxFile;
+        String cnFile = null;
         String seqFile;
         int trainset_no = 1;
         String version = null;
@@ -134,6 +133,9 @@ public class ClassifierTraineeMaker {
             } else {
                 throw new Exception("taxon file must be specified");
             }
+            if (line.hasOption("c")) {
+                cnFile = line.getOptionValue("c");
+            } 
             if (line.hasOption("s")) {
                 seqFile = line.getOptionValue("s");
             } else {
@@ -165,6 +167,6 @@ public class ClassifierTraineeMaker {
             return;
         }
         
-        ClassifierTraineeMaker maker = new ClassifierTraineeMaker(taxFile, seqFile, trainset_no, version, modification, outdir);
+        ClassifierTraineeMaker maker = new ClassifierTraineeMaker(taxFile, seqFile, cnFile, trainset_no, version, modification, outdir);
     }
 }

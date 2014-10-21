@@ -6,10 +6,14 @@ The RDP Classifier is a naive Bayesian classifier which was developed to provide
 How to cite Classifier? Wang, Q, G. M. Garrity, J. M. Tiedje, and J. R. Cole. 2007. 
 Naive Bayesian Classifier for Rapid Assignment of rRNA Sequences into the New Bacterial Taxonomy. Appl Environ Microbiol. 73(16):5261-7.
 
+Gene Copy Number Adjustment
+Classifier provides gene copy number adjustment for 16S gene sequences (see http://rdp.cme.msu.edu/classifier/class_help.jsp#copynumber). 
+The precompiled Classifier was trained with the 16S gene copy number data provided by rrnDB website. 
+The Classifier can be trained with user-provided gene copy number data. See How to Train the Classifier below.
 
-BIOM FORMAT
+BIOM Format
 
-The Classifier can now take an input minimal (or rich) dense BIOM file as input with an optional Metadata file, and produces a rich dense BIOM file. If an input cluster BIOM file ( version 1.0) is provided, the classification result of each sequence will replace the taxonomy of the corresponding cluster. If a metadata file is provided, the information will replace the metadata of the corresponding sample. The resulting rich dense BIOM file can be used by thirdparty tools such as phyloseq or QIIME etc.
+The Classifier can take an input minimal (or rich) dense BIOM file as input with an optional Metadata file, and produces a rich dense BIOM file. If an input cluster BIOM file ( version 1.0) is provided, the classification result of each sequence will replace the taxonomy of the corresponding cluster. If a metadata file is provided, the information will replace the metadata of the corresponding sample. The resulting rich dense BIOM file can be used by thirdparty tools such as phyloseq or QIIME etc.
 
 The BIOM file format is designed to be a general-use format for representing biological sample by observation contingency tables. BIOM is a recognized standard for the Earth Microbiome Project and is a Genomics Standards Consortium supported project.
 
@@ -123,7 +127,7 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
 	java -Xmx1g -jar /path/to/classifier.jar merge-count merged_hier.txt sampleset1_hier.txt sampleset2_hier.txt sampleset3_hier.txt
 
 
-5. Retrain the Classifier
+5. How to Train the Classifier
 	a. Follow these steps when there is a need to retrain Classifier, such as novel lineages, newly named type organisms, taxonomic rearrangements, better training set covering specific taxa, or alternative taxonomy. Two files, a taxonomy file and a training sequence file with lineage are required. Prefer high quality, full length sequences, or at least covering the entire region of gene of interest. See samplefiles for example data files. The 16S rRNA training data and Fungal LSU training data can be download from http://sourceforge.net/projects/rdp-classifier/?source=directory. 
 	Based on our experience, trimming the sequences to a specific region does not improve accuracy. The ranks are not required to be uniform neither, which means you can define any number of ranks as necessary. The speed of the Classifier is proportional to the number of genera, not the number of training sequences.
 	
@@ -154,9 +158,11 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
     If you are satisfied with the testing results, go ahead to train the classifier.
 	
     [Example command to train classifier]:
-    java -Xmx1g -jar /path/to/classifier.jar train -o mytrained -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt
+    java -Xmx1g -jar /path/to/classifier.jar train -o mytrained -s samplefiles/new_trainset.fasta -t samplefiles/new_trainset_db_taxid.txt -c gene_copynumber.txt
     cp samplefiles/rRNAClassifier.properties mytrained/
 	
+    "-c" specify the gene copy number file. It should at least three columns: name, rank and mean for the lowest rank taxon to be trained. See example file samplefiles/gene_copynumber.txt
+
     g. Classify sequences using the new model
 	
     [Example command to classify with the new model using "-t" option]:

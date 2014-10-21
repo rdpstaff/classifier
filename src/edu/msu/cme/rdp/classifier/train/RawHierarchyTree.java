@@ -33,6 +33,7 @@ public class RawHierarchyTree {
     private Taxonomy taxon;    // the unique id for this treenode
     private int genusIndex = -1;  // -1 means not a genus node
     //if this node is a genus node, the index of this genus in the genusNodeList
+    private float avgCopyNumber = 0.0f; // the mean number of gene copies of the directly children of this node, default 0 means info not available
 
     /** Creates new RawHierarchyTree given the name and its parent. 
      * Note: a RawHierarchyTree can only have one type of children:
@@ -59,6 +60,18 @@ public class RawHierarchyTree {
         subclasses.put(c.getName(), c);
     }
 
+    protected void setCopyNumber(float c){
+        this.avgCopyNumber = c;
+    }
+    
+    public float getCopyNumber(){
+        return avgCopyNumber;
+    }
+    
+    public boolean hasCopyNumber(){
+        return (avgCopyNumber > 0);
+    }
+        
     /** Gets the name of the treenode. */
     public String getName() {
         return name;
@@ -70,7 +83,7 @@ public class RawHierarchyTree {
     }
 
     /** Gets the array of the subclasses if any. */
-    public Collection getSubclasses() {
+    public Collection<RawHierarchyTree> getSubclasses() {
         return subclasses.values();
     }
 

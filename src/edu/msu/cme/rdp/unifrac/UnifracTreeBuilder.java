@@ -35,7 +35,7 @@ public class UnifracTreeBuilder {
 
     public static class UnifracSample {
         public MCSample sample;
-        public int count;
+        public double count;
     }
 
     private ClassifierTreeBuilder builder;

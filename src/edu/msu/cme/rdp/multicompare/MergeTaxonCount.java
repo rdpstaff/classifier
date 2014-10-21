@@ -92,7 +92,7 @@ public class MergeTaxonCount {
         MCTaxon curTaxon = (MCTaxon)(result.getRoot().getRootTaxonHodler().getTaxon());
         // add counts
         for ( int i = offset; i< values.length; i++){
-            curTaxon.incCount(curSampleList.get(i-offset), Integer.parseInt(values[i]));
+            curTaxon.incCount(curSampleList.get(i-offset), Double.parseDouble(values[i]));
         }
         
         for ( int ln = 2; ln < oneHierBlock.size(); ln++){
@@ -127,7 +127,7 @@ public class MergeTaxonCount {
             }
             // add counts
             for ( int i = offset; i< values.length; i++){
-                curTaxon.incCount(curSampleList.get(i-offset), Integer.parseInt(values[i]));
+                curTaxon.incCount(curSampleList.get(i-offset), Double.parseDouble(values[i]));
             }
         }
 

@@ -33,14 +33,23 @@ public class DefaultPrintVisitor implements TreeVisitor<MCTaxon> {
     private PrintStream out;
     private List<MCSample> samples;
     private boolean ommitEmpty;
+    private boolean printCNcorrected;   // print copy number corrected counts
+    private static final String dformat = "%1$.3f";
+     //select a "tolerance range" for being an integer
+    private static final double TOLERANCE = 1E-5 ;
 
     public DefaultPrintVisitor(PrintStream out, List<MCSample> samples) {
-        this(out, samples, true);
+        this(out, samples, false, true);
+    }
+    
+    public DefaultPrintVisitor(PrintStream out, List<MCSample> samples, boolean printCNcorrected) {
+        this(out, samples, printCNcorrected, true);
     }
 
-    public DefaultPrintVisitor(PrintStream out, List<MCSample> samples, boolean ommitEmpty) {
+    public DefaultPrintVisitor(PrintStream out, List<MCSample> samples, boolean printCNcorrected, boolean ommitEmpty) {
         this.out = out;
         this.samples = samples;
+        this.printCNcorrected = printCNcorrected;
         printHeader();
     }
 
@@ -52,13 +61,23 @@ public class DefaultPrintVisitor implements TreeVisitor<MCTaxon> {
         out.println(ret);
     }
 
+    @Override
     public boolean visitNode(VisitInfo<MCTaxon> info) {
         StringBuffer sampleBuf = new StringBuffer();
         MCTaxon taxon = info.getTaxon();
 
         int seqCount = 0;
         for(MCSample sample : samples) {
-            sampleBuf.append("\t" + taxon.getCount(sample));
+            if ( !printCNcorrected ){
+                double d = taxon.getCount(sample);
+                if ( isDoubleInt(d)){ // we need to write out integers in case other third party tools expect an integer
+                    sampleBuf.append("\t").append( (long) d );
+                }else {
+                    sampleBuf.append("\t").append(String.format(dformat, d) );
+                }
+            } else {
+                sampleBuf.append("\t").append(String.format(dformat, taxon.getCopyCorrectedCount(sample)));
+            }
             seqCount += taxon.getCount(sample);
         }
 
@@ -67,4 +86,10 @@ public class DefaultPrintVisitor implements TreeVisitor<MCTaxon> {
 
         return true;
     }
+    
+    public boolean isDoubleInt(double d){
+        //do not use (int)d, due to weird floating point conversions!      
+        return Math.abs(Math.floor(d) - d) < TOLERANCE;
+    }
+    
 }

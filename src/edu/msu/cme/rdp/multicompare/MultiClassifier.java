@@ -52,6 +52,8 @@ public class MultiClassifier {
     private File biomFile = null;
     private HashMap<String, HashMap<String, String>> metadataMap = null;
     private String[] ranks = ClassificationResultFormatter.RANKS; // default ranks;
+    private HashMap<Taxon, Double> cachedCopynumberMap = new HashMap<Taxon, Double>();
+    private boolean hasCopyNumber;
 
     public MultiClassifier(String propfile, String gene){
 
@@ -66,6 +68,7 @@ public class MultiClassifier {
         if ( gene != null && (gene.equalsIgnoreCase(ClassifierFactory.FUNGALITS_warcup_GENE) || gene.equalsIgnoreCase(ClassifierFactory.FUNGALITS_unite_GENE)) ){
             ranks = ClassificationResultFormatter.RANKS_WITHSPECIES;
         }
+        hasCopyNumber = classifierFactory.getRoot().hasCopyNumberInfo();
     }
 
     public MultiClassifier(String propfile, String gene, File biomFile, File metadataFile) throws IOException{
@@ -74,6 +77,10 @@ public class MultiClassifier {
         if ( metadataFile != null){
             metadataMap = readMetaData(metadataFile);
         }        
+    }
+    
+    public boolean hasCopyNumber(){
+        return hasCopyNumber;
     }
     
     public MultiClassifierResult multiCompare(List<MCSample> samples) throws IOException {
@@ -102,7 +109,7 @@ public class MultiClassifier {
 
         Classifier classifier = classifierFactory.createClassifier();
         List<String> badSequences = new ArrayList();
-        Map<String, Integer> seqCountMap = new HashMap();
+        Map<String, Long> seqCountMap = new HashMap();
         Map<String, String> seqClassificationMap = new HashMap(); // holds the classification results to replace the biom metadata
         if ( format.equals(ClassificationResultFormatter.FORMAT.filterbyconf) ){
             for (int i = 0; i <= ranks.length -1; i++) {
@@ -243,7 +250,7 @@ public class MultiClassifier {
         HierarchyTree sampleTreeRoot  = classifierFactory.getRoot();
         ConcretRoot<MCTaxon> root = new ConcretRoot<MCTaxon>(new MCTaxon(sampleTreeRoot.getTaxid(), sampleTreeRoot.getName(), sampleTreeRoot.getRank()) );
         List<String> badSequences = new ArrayList();
-        Map<String, Integer> seqCountMap = new HashMap();
+        Map<String, Long> seqCountMap = new HashMap();
 
         for (MCSample sample : samples) {
             ClassificationParser parser = ((MCSampleResult) sample).getClassificationParser(classifierFactory);
@@ -280,7 +287,7 @@ public class MultiClassifier {
         return new MultiClassifierResult(root, samples, badSequences, seqCountMap);
     }
 
-    private MCTaxon findOrCreateTaxon(ConcretRoot<MCTaxon> root, RankAssignment assignment, int parentId, boolean unclassified, Map<String, Integer> seqCountMap, String lineage) {
+    private MCTaxon findOrCreateTaxon(ConcretRoot<MCTaxon> root, RankAssignment assignment, int parentId, boolean unclassified, Map<String, Long> seqCountMap, String lineage) {
         int taxid = assignment.getTaxid();
         if (unclassified) {
             taxid = Taxon.getUnclassifiedId(taxid);
@@ -288,13 +295,12 @@ public class MultiClassifier {
 
         MCTaxon ret = root.getChildTaxon(taxid);
         if (ret == null) {
-
             ret = new MCTaxon(assignment.getTaxid(), assignment.getName(), assignment.getRank(), unclassified);
             root.addChild(ret, parentId);
 
-            Integer val = seqCountMap.get(ret.getRank());
+            Long val = seqCountMap.get(ret.getRank());
             if (val == null) {
-                val = 0;
+                val = 0L;
             }
             seqCountMap.put(ret.getRank(), val + 1);
             ret.setLineage(lineage.toString() + ret.getName() + ";" + ret.getRank() + ";");
@@ -308,18 +314,17 @@ public class MultiClassifier {
         assign_out.print(assignmentStr);
     }
 
-    private void processClassificationResult(ClassificationResult result, MCSample sample, ConcretRoot<MCTaxon> root, float conf, Map<String, Integer> seqCountMap) {
+    
+    private void processClassificationResult(ClassificationResult result, MCSample sample, ConcretRoot<MCTaxon> root, float conf, Map<String, Long> seqCountMap) {
         RankAssignment lastAssignment = null;
         RankAssignment twoAgo = null;
-        StringBuffer lineage = new StringBuffer();
-        
+        StringBuffer lineage = new StringBuffer();        
         MCTaxon taxon = null;
+        MCTaxon cntaxon = null;
+        HashSet<MCTaxon> tempTaxonSet = new HashSet<MCTaxon>();
+        int parentId = root.getRootTaxid();    
+        int count = sample.getDupCount(result.getSequence().getSeqName());
         for (RankAssignment assignment : (List<RankAssignment>) result.getAssignments()) {
-
-            int parentId = root.getRootTaxid();
-            if (lastAssignment != null) {
-                parentId = lastAssignment.getTaxid();
-            }
             boolean stop = false;
             if (assignment.getConfidence() < conf) {
 
@@ -327,16 +332,17 @@ public class MultiClassifier {
                 if (twoAgo != null) {
                     parentId = twoAgo.getTaxid();
                 }
-
+                cntaxon = taxon;  // we only used the real taxon, not the unclassified taxon to find copy number
                 taxon = findOrCreateTaxon(root, lastAssignment, parentId, true, seqCountMap, lineage.toString());
                 stop = true;
             } else {
+                if (lastAssignment != null) {
+                    parentId = lastAssignment.getTaxid();
+                }
                 taxon = findOrCreateTaxon(root, assignment, parentId, false, seqCountMap, lineage.toString());
-
-            }
-
-            int count = sample.getDupCount(result.getSequence().getSeqName());
-            taxon.incCount(sample, count);
+                cntaxon = taxon; 
+            }  
+            tempTaxonSet.add(taxon);            
             twoAgo = lastAssignment;
             lastAssignment = assignment;
 
@@ -344,7 +350,33 @@ public class MultiClassifier {
                 break;
             }
             lineage.append(assignment.getName()).append(";").append(assignment.getRank()).append(";");
-
         }
+        if ( hasCopyNumber()){
+            // need to get the copy number for lowest level taxon above the conf cutoff, and add the count up 
+            double copynumber = findCopyNumber(result.getAssignments().get(result.getAssignments().size()-1), cntaxon);
+            for ( MCTaxon t: tempTaxonSet) {
+                t.incCount(sample, count, copynumber);
+            }
+        }else {
+            for ( MCTaxon t: tempTaxonSet) {
+                t.incCount(sample, count);
+            }
+        }
+    }
+    
+    private double findCopyNumber(RankAssignment assignment, Taxon taxon){
+        Double copyNumber = this.cachedCopynumberMap.get(taxon);
+        if (copyNumber == null){           
+            HierarchyTree curTaxon = assignment.getBestClass();
+            while ( curTaxon != null){                
+                if ( curTaxon.getName().equalsIgnoreCase(taxon.getName()) && curTaxon.getRank().equalsIgnoreCase(taxon.getRank())){
+                    copyNumber = curTaxon.getCopyNumber();
+                    this.cachedCopynumberMap.put(taxon, copyNumber);
+                    break;
+                }
+                curTaxon = curTaxon.getParent();
+            }
+        }
+        return copyNumber;
     }
 }

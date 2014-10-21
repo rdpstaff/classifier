@@ -35,6 +35,7 @@ public class TrainingInfo {
     // GenusIndexWordConditionalProb for each word in the ArrayList
     private float[] logLeaveCountArr;  // an array of log value of genus leaveCount
     private HierarchyTree rootTree;    // the root of the trees
+    private String trainRank = "genus"; // the lowest level rank of the taxon trained on
     private float[] logWordPriorArr = new float[NUM_OF_WORDS];
     // an array of log value of priors for words, the index is the integer
     // form of the word . for word size 8, there are 65536 possible words
@@ -70,6 +71,7 @@ public class TrainingInfo {
         for (HierarchyTree node : genusNodeList) {
             logLeaveCountArr[node.getGenusIndex()] = (float) Math.log(node.getLeaveCount() + 1);
         }
+        this.trainRank = parser.getTrainRank();
         isTreeDone = true;
     }
 
@@ -150,7 +152,15 @@ public class TrainingInfo {
     public HierarchyTree getRootTree() {
         return rootTree;
     }
-
+    
+    /**
+     * 
+     * @return the rank the classifier was trained on
+     */
+    public String getTrainRank(){
+        return trainRank;
+        
+    }
     /** Returns the number of the genus nodes.
      */
     public int getGenusNodeListSize() {

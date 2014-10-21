@@ -98,7 +98,7 @@ public class UnifracTree extends ConcretRoot<UnifracTaxon> {
          */
         Map<MCSample, List<UnifracSample>> allSamplesMap = new HashMap();
         Map<Integer, List<UnifracSample>> originalSampleMap = new HashMap();
-        Map<MCSample, Integer> totalsMap = new HashMap();
+        Map<MCSample, Double> totalsMap = new HashMap();
 
         for (TaxonHolder<UnifracTaxon> t : taxonMap.values()) {
             
@@ -118,7 +118,7 @@ public class UnifracTree extends ConcretRoot<UnifracTaxon> {
                     }
 
                     if(!totalsMap.containsKey(sample))
-                        totalsMap.put(sample, 0);
+                        totalsMap.put(sample, 0.0);
 
                     allSamplesMap.get(sample).add(unifracSample);
                     originalSampleMap.get(t.getTaxon().getTaxid()).add(unifracSample);
@@ -213,13 +213,13 @@ public class UnifracTree extends ConcretRoot<UnifracTaxon> {
 
     public UnifracResult computeWeightedUnifrac() {
         Set<MCSample> samplesSet = new HashSet();
-        Map<MCSample, Integer> totalsMap = new HashMap();
+        Map<MCSample, Double> totalsMap = new HashMap();
 
         for (int i : leaves) {
             UnifracTaxon leaf = this.getChildTaxon(i);
             for (MCSample sample : leaf.getSamples()) {
                 if (!totalsMap.containsKey(sample)) {
-                    totalsMap.put(sample, 0);
+                    totalsMap.put(sample, 0.0);
                 }
                 samplesSet.add(sample);
                 totalsMap.put(sample, totalsMap.get(sample) + leaf.getCount(sample));
@@ -240,12 +240,12 @@ public class UnifracTree extends ConcretRoot<UnifracTaxon> {
         return new UnifracResult(samples, unifracMatrix);
     }
 
-    private float computeUnifracMetricWeighted(MCSample sample1, MCSample sample2, Map<MCSample, Integer> totalsMap) {
+    private float computeUnifracMetricWeighted(MCSample sample1, MCSample sample2, Map<MCSample, Double> totalsMap) {
 
         float ret = 0;
         for (TaxonHolder<UnifracTaxon> taxonHolder : taxonMap.values()) {
             UnifracTaxon taxon = taxonHolder.getTaxon();
-            ret += taxon.getBl() * Math.abs(((float) taxon.getCount(sample1)) / totalsMap.get(sample1) - ((float) taxon.getCount(sample2)) / totalsMap.get(sample2));
+            ret += taxon.getBl() * Math.abs(( taxon.getCount(sample1)) / totalsMap.get(sample1) - ( taxon.getCount(sample2)) / totalsMap.get(sample2));
         }
 
         return ret;

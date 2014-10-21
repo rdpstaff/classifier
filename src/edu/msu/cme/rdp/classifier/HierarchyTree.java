@@ -26,14 +26,20 @@ public class HierarchyTree {
     private List<HierarchyTree> subclasses = new ArrayList();
     /**-1 means not a genus node. If this node is a genus node, the genusIndex indicates the index of this node among all the genera */
     private int genusIndex = -1;
+    private double copyNumber = 0.0; // the mean number of gene copies for this node, default 0 means info not available
 
     /** Creates new HierarchyTree given the taxonomic information. */
-    public HierarchyTree(String n, int taxid, String rank, int leaves, int gIndex) {
+    public HierarchyTree(String n, int taxid, String rank, int leaves, int gIndex, double copyNumber) {
         name = n;
         this.taxid = taxid;
         this.rank = rank;
-        leaveCount = leaves;
-        genusIndex = gIndex;
+        this.leaveCount = leaves;
+        this.genusIndex = gIndex;
+        this.copyNumber = copyNumber;
+    }
+    
+    public HierarchyTree(String n, int taxid, String rank, int leaves, int gIndex){
+        this(n, taxid, rank, leaves, gIndex, 1.0);
     }
 
     /** Adds the parent HierarchyTree, also adds this node to the parent treenode as a child. */
@@ -78,6 +84,15 @@ public class HierarchyTree {
     public int getSizeofSubclasses() {
         return subclasses.size();
     }
+    
+    public HierarchyTree getChild(String name){
+        for ( HierarchyTree t: subclasses){
+            if (t.getName().equals(name) ){
+                return t;
+            }
+        }
+        return null;
+    }
 
     /** Gets the size of sequence leaves directly belong to this treenode.
      */
@@ -90,5 +105,18 @@ public class HierarchyTree {
      */
     public int getGenusIndex() {
         return genusIndex;
+    }
+    
+    /**
+     */
+    public double getCopyNumber(){
+        return copyNumber;
+    }
+    
+    /**
+     * @return true if the taxon has copy number information 
+     */
+    public boolean hasCopyNumberInfo(){
+        return (copyNumber > 0);
     }
 }
