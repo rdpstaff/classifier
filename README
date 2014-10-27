@@ -13,7 +13,7 @@ The Classifier can be trained with user-provided gene copy number data. See How 
 
 BIOM Format
 
-The Classifier can take an input minimal (or rich) dense BIOM file as input with an optional Metadata file, and produces a rich dense BIOM file. If an input cluster BIOM file ( version 1.0) is provided, the classification result of each sequence will replace the taxonomy of the corresponding cluster. If a metadata file is provided, the information will replace the metadata of the corresponding sample. The resulting rich dense BIOM file can be used by thirdparty tools such as phyloseq or QIIME etc.
+The Classifier can take an input minimal (or rich) dense BIOM file as input with an optional Metadata file, and produces a rich dense BIOM file. If an input cluster BIOM file ( version 1.0) is provided, along with the representative Sequences input file (output from Clustering rep-seqs subcommand), the classification result of each sequence will replace the taxonomy of the corresponding cluster. If a metadata file is provided, the information will replace the metadata of the corresponding sample. The resulting rich dense BIOM file can be used by thirdparty tools such as phyloseq or QIIME etc.
 
 The BIOM file format is designed to be a general-use format for representing biological sample by observation contingency tables. BIOM is a recognized standard for the Earth Microbiome Project and is a Genomics Standards Consortium supported project.
 
