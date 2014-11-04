@@ -8,6 +8,8 @@
 package edu.msu.cme.rdp.classifier.rrnaclassifier;
 
 import edu.msu.cme.rdp.classifier.utils.ClassifierSequence;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
+import java.io.IOException;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -65,7 +67,7 @@ public class ParsedSequenceTest extends TestCase {
         word[6] = 3;
         word[7] = 1;
 
-        int[] revWord = ClassifierSequence.getReversedWord(word);
+        int[] revWord = GoodWordIterator.getReversedWord(word);
         assertEquals(revWord[0], 0);
         assertEquals(revWord[3], 1);
         assertEquals(revWord[7], 3);
@@ -86,11 +88,11 @@ public class ParsedSequenceTest extends TestCase {
         word[5] = 3;
         word[6] = 3;
         word[7] = 1;
-        int wordIndex = ClassifierSequence.getWordIndex(word);
+        int wordIndex = GoodWordIterator.getWordIndex(word);
         assertEquals(wordIndex, (24573));
 
-        int[] revWord = ClassifierSequence.getReversedWord(word);
-        wordIndex = ClassifierSequence.getWordIndex(revWord);
+        int[] revWord = GoodWordIterator.getReversedWord(word);
+        wordIndex = GoodWordIterator.getWordIndex(revWord);
         assertEquals(wordIndex, (10912));
 
     }
@@ -99,7 +101,7 @@ public class ParsedSequenceTest extends TestCase {
      * Test of createWordIndexArr method, of class
      * edu.msu.cme.rdp.classifier.readseqwrapper.ParsedSequence.
      */
-    public void testCreateWordIndexArr() {
+    public void testCreateWordIndexArr() throws IOException {
         System.out.println("testCreateWordIndexArr");
 
         String seqString = "AAAAAAAAAG-CCCCCCCCUGAGGGUUACnAA";

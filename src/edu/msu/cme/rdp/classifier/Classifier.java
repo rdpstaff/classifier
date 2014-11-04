@@ -9,6 +9,8 @@ package edu.msu.cme.rdp.classifier;
 
 import edu.msu.cme.rdp.classifier.utils.ClassifierSequence;
 import edu.msu.cme.rdp.readseq.readers.Sequence;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
+import java.io.IOException;
 import java.util.*;
 
 
@@ -28,7 +30,7 @@ public class Classifier {
     public static final int MIN_SEQ_LEN = 50;
     public static final int MAX_SEQ_LEN = 5000;
 
-    public static final int MIN_GOOD_WORDS = MIN_SEQ_LEN - ClassifierSequence.WORDSIZE;
+    public static final int MIN_GOOD_WORDS = MIN_SEQ_LEN - GoodWordIterator.DEFAULT_WORDSIZE;
     public static final int MIN_BOOTSTRSP_WORDS = 5;   // mininum number of words needs for bootstrap
 
     private float[][] querySeq_wordProbArr;  // 2-D array for the query sequence
@@ -37,7 +39,6 @@ public class Classifier {
     private long seed = 1;
     private Random randomGenerator = new Random(seed);
     private Random randomSelectGenera = new Random();
-    private int[] wordIndexArr = new int[1024];
 
     /** Creates new Classifier.  */
     Classifier(TrainingInfo t) {
@@ -58,11 +59,11 @@ public class Classifier {
      * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus.
      * @throws ShortSequenceException if the sequence length is less than the minimum sequence length.
      */
-    public ClassificationResult classify(Sequence seq) {
+    public ClassificationResult classify(Sequence seq) throws IOException {
         return classify(new ClassifierSequence(seq));
     }
 
-    public ClassificationResult classify(ClassifierSequence seq) {
+    public ClassificationResult classify(ClassifierSequence seq) throws IOException {
         return classify(seq, MIN_BOOTSTRSP_WORDS );
     }
 
@@ -73,21 +74,15 @@ public class Classifier {
      * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus.
      * @throws ShortSequenceException if the sequence length is less than the minimum sequence length.
      */
-    public ClassificationResult classify(ClassifierSequence seq, int min_bootstrap_words) {
+    public ClassificationResult classify(ClassifierSequence seq, int min_bootstrap_words) throws IOException {
         GenusWordConditionalProb gProb = null;
         int nodeListSize = trainingInfo.getGenusNodeListSize();
         boolean reversed = false;
-        int wordCount = seq.getSeqString().length();
-
-        if(wordIndexArr.length < seq.getSeqString().length()) {
-            wordIndexArr = new int[seq.getSeqString().length()];
-        }
-
-        seq.createWordIndexArr(wordIndexArr);
-
-        if (trainingInfo.isSeqReversed(wordIndexArr, wordCount)) {
+        
+        int [] wordIndexArr = seq.createWordIndexArr();
+        if (trainingInfo.isSeqReversed(wordIndexArr, seq.getGoodWordCount())) {
             seq = seq.getReversedSeq();
-            seq.createWordIndexArr(wordIndexArr);
+            wordIndexArr = seq.createWordIndexArr();
             reversed = true;
         }
 
@@ -108,7 +103,7 @@ public class Classifier {
             System.err.println("increase the array size to " + goodWordCount);
         }
 
-        int NUM_OF_SELECTIONS = Math.max( goodWordCount / ClassifierSequence.WORDSIZE, min_bootstrap_words);
+        int NUM_OF_SELECTIONS = Math.max( goodWordCount / GoodWordIterator.getWordsize(), min_bootstrap_words);
 
         for (int offset = 0; offset < goodWordCount; offset++) {
             int wordIndex = wordIndexArr[offset];

@@ -13,6 +13,7 @@ import edu.msu.cme.rdp.classifier.io.TreeFileParser;
 import edu.msu.cme.rdp.classifier.io.LogWordPriorFileParser;
 import edu.msu.cme.rdp.classifier.utils.ClassifierSequence;
 import edu.msu.cme.rdp.classifier.utils.HierarchyVersion;
+import edu.msu.cme.rdp.readseq.utils.orientation.GoodWordIterator;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class TrainingInfo {
         hierarchyVersion = LogWordPriorFileParser.createLogWordPriorArr(reader, logWordPriorArr, hierarchyVersion);
         isWordPriorArrDone = true;
 
-        int[] origWord = new int[ClassifierSequence.WORDSIZE];
+        int[] origWord = new int[GoodWordIterator.DEFAULT_WORDSIZE];
         generateWordPairDiffArr(origWord, 0);
     }
 
@@ -95,8 +96,8 @@ public class TrainingInfo {
             return;
         }
 
-        int origWordIndex = ClassifierSequence.getWordIndex(word);
-        int revWordIndex = ClassifierSequence.getWordIndex(ClassifierSequence.getReversedWord(word));
+        int origWordIndex = GoodWordIterator.getWordIndex(word);
+        int revWordIndex = GoodWordIterator.getWordIndex(GoodWordIterator.getReversedWord(word));
 
         float origWordPrior = this.getLogWordPrior(origWordIndex);
         float revWordPrior = this.getLogWordPrior(revWordIndex);
@@ -104,7 +105,7 @@ public class TrainingInfo {
 
         for (int i = beginIndex; i < word.length; i++) {
             int origBase = word[i];
-            for (int j = 0; j < ClassifierSequence.RNA_BASES; j++) {
+            for (int j = 0; j < GoodWordIterator.RNA_BASES; j++) {
                 if (word[i] == j) {
                     continue;
                 }
@@ -256,7 +257,7 @@ public class TrainingInfo {
      * and the reverse complements of those word. If the summation is
      * less that zero, the query sequence is in reverse orientation.
      */
-    public boolean isSeqReversed(ClassifierSequence seq) {
+    public boolean isSeqReversed(ClassifierSequence seq) throws IOException {
         int[] wordIndexArr = seq.createWordIndexArr();
         boolean reverse = false;
         float priorDiff = 0;
