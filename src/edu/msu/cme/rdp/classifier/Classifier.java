@@ -63,7 +63,7 @@ public class Classifier {
         return classify(new ClassifierSequence(seq));
     }
 
-    public ClassificationResult classify(ClassifierSequence seq) throws IOException {
+    public ClassificationResult classify(ClassifierSequence seq) {
         return classify(seq, MIN_BOOTSTRSP_WORDS );
     }
 
@@ -74,15 +74,16 @@ public class Classifier {
      * the number of bootstrap trials was used as an estimate of confidence in the assignment to that genus.
      * @throws ShortSequenceException if the sequence length is less than the minimum sequence length.
      */
-    public ClassificationResult classify(ClassifierSequence seq, int min_bootstrap_words) throws IOException {
+    public ClassificationResult classify(ClassifierSequence seq, int min_bootstrap_words) {
         GenusWordConditionalProb gProb = null;
         int nodeListSize = trainingInfo.getGenusNodeListSize();
         boolean reversed = false;
         
-        int [] wordIndexArr = seq.createWordIndexArr();
+        try {
+        int [] wordIndexArr = seq.getWordIndexArr();
         if (trainingInfo.isSeqReversed(wordIndexArr, seq.getGoodWordCount())) {
             seq = seq.getReversedSeq();
-            wordIndexArr = seq.createWordIndexArr();
+            wordIndexArr = seq.getWordIndexArr();
             reversed = true;
         }
 
@@ -99,8 +100,7 @@ public class Classifier {
         }
 
         if (goodWordCount > MAX_NUM_OF_WORDS) {
-            querySeq_wordProbArr = new float[goodWordCount][nodeListSize];
-            System.err.println("increase the array size to " + goodWordCount);
+            querySeq_wordProbArr = new float[goodWordCount][nodeListSize];            
         }
 
         int NUM_OF_SELECTIONS = Math.max( goodWordCount / GoodWordIterator.getWordsize(), min_bootstrap_words);
@@ -199,6 +199,10 @@ public class Classifier {
         ClassificationResult finalResult = new ClassificationResult(seq, reversed, finalAssigns, trainingInfo.getHierarchyInfo());
 
         return finalResult;
+        } catch (IOException ex){
+            throw new ShortSequenceException(seq.getSeqName(), "ShortSequenceException: The length of sequence with recordID="
+                    + seq.getSeqName() + " is less than " + MIN_SEQ_LEN);
+        }
     }
 
     /**

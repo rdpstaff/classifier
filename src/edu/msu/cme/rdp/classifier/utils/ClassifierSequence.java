@@ -22,16 +22,23 @@ import java.io.IOException;
 public class ClassifierSequence extends Sequence {
     private boolean reverse = false;
     private Integer goodWordCount = null; // the number of words with only valid bases
-
+    private int [] wordIndexArr = null; 
     /**
      * Creates new ParsedSequence.
      */
-    public ClassifierSequence(Sequence seq) {
+    public ClassifierSequence(Sequence seq) throws IOException{
         this(seq.getSeqName(), seq.getDesc(), seq.getSeqString());
     }
 
-    public ClassifierSequence(String seqName, String desc, String seqString) {
+    public ClassifierSequence(String seqName, String desc, String seqString) throws IOException {
         super(seqName, desc, SeqUtils.getUnalignedSeqString(seqString));
+        /**
+        * Fetches every overlapping word from the sequence string, changes each
+        * word to integer format and saves in an array.
+        */
+        GoodWordIterator iterator = new GoodWordIterator(this.getSeqString());
+        this.wordIndexArr = iterator.getWordArr();        
+        this.goodWordCount = wordIndexArr.length;
     }
 
     /**
@@ -41,6 +48,9 @@ public class ClassifierSequence extends Sequence {
         seqString = s;
     }
 
+    public int[] getWordIndexArr(){
+        return this.wordIndexArr;
+    }
     /**
      * Returns true if the sequence string is a minus strand.
      */
@@ -52,31 +62,16 @@ public class ClassifierSequence extends Sequence {
      * Returns a Sequence object whose sequence string is the reverse complement
      * of the current rRNA sequence string.
      */
-    public ClassifierSequence getReversedSeq() {
+    public ClassifierSequence getReversedSeq() throws IOException {
         ClassifierSequence retval = new ClassifierSequence(seqName, desc, IUBUtilities.reverseComplement(seqString));
         retval.reverse = true;
         return retval;
     }
     
     /**
-     * Fetches every overlapping word from the sequence string, changes each
-     * word to integer format and saves in an array.
-     */
-    public int[] createWordIndexArr() throws IOException {
-        GoodWordIterator iterator = new GoodWordIterator(this.getSeqString());
-        int [] wordIndexArr = iterator.getWordArr();
-        
-        this.goodWordCount = wordIndexArr.length;
-        return wordIndexArr;
-    }
-
-    /**
      * Returns the number of words with valid bases.
      */
-    public int getGoodWordCount() throws IOException {
-        if (goodWordCount == null) {
-            this.createWordIndexArr();
-        }
+    public int getGoodWordCount() {
         return goodWordCount;
     }
 }

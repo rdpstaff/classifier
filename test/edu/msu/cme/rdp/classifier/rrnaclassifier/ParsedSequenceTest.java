@@ -38,7 +38,7 @@ public class ParsedSequenceTest extends TestCase {
      * Test of getReversedSeq method, of class
      * edu.msu.cme.rdp.classifier.readseqwrapper.ParsedSequence.
      */
-    public void testGetReversedSeq() {
+    public void testGetReversedSeq() throws IOException {
         System.out.println("testGetReversedSeq");
 
         //                 "AAAAAAAAAG-CCCCCCCCUGAGGGUUACnAA";
@@ -107,7 +107,7 @@ public class ParsedSequenceTest extends TestCase {
         String seqString = "AAAAAAAAAG-CCCCCCCCUGAGGGUUACnAA";
         ClassifierSequence aSeq = new ClassifierSequence("test", "", seqString);
 
-        int[] wordIndexArr = aSeq.createWordIndexArr();
+        int[] wordIndexArr = aSeq.getWordIndexArr();
 
         assertEquals(0, wordIndexArr[0]);   //AAAAAAAA
 

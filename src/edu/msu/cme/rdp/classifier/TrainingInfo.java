@@ -258,7 +258,7 @@ public class TrainingInfo {
      * less that zero, the query sequence is in reverse orientation.
      */
     public boolean isSeqReversed(ClassifierSequence seq) throws IOException {
-        int[] wordIndexArr = seq.createWordIndexArr();
+        int[] wordIndexArr = seq.getWordIndexArr();
         boolean reverse = false;
         float priorDiff = 0;
         for (int offset = 0; offset < wordIndexArr.length; offset++) {
