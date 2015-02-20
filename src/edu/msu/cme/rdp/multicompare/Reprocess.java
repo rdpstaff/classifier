@@ -140,7 +140,8 @@ public class Reprocess {
                 }
                 gene = line.getOptionValue(CmdOptions.GENE_SHORT_OPT).toLowerCase();
 
-                if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)) {
+                if (!gene.equals(ClassifierFactory.RRNA_16S_GENE) && !gene.equals(ClassifierFactory.FUNGALLSU_GENE)
+                    && !gene.equals(ClassifierFactory.FUNGALITS_warcup_GENE) && !gene.equals(ClassifierFactory.FUNGALITS_unite_GENE) ) {
                     throw new IllegalArgumentException(gene + " is NOT valid, only allows " + ClassifierFactory.RRNA_16S_GENE
                      + ", " + ClassifierFactory.FUNGALLSU_GENE + ", " + ClassifierFactory.FUNGALITS_warcup_GENE + " and " + ClassifierFactory.FUNGALITS_unite_GENE);
                 }

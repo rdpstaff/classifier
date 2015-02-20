@@ -69,7 +69,7 @@ import java.util.Set;
         DecisionMaker dm = new DecisionMaker(factory);
          // get all the genus node list
         HashMap<String, HierarchyTree> genusNodeMap = new HashMap<String, HierarchyTree>();
-        factory.getRoot().getNodeMap(Taxonomy.GENUS, genusNodeMap);
+        factory.getRoot().getNodeMap(factory.getLowestRank(), genusNodeMap);
         if (genusNodeMap.isEmpty()) {
           throw new IllegalArgumentException("\nThere is no node in GENUS level!");
         }
@@ -115,7 +115,7 @@ import java.util.Set;
           }
         
           List result = dm.getBestClasspath( wordIterator, genusNodeMap, useSeed, min_bootstrap_words);
-
+          
           //xxx
           ValidClassificationResultFacade resultFacade = new ValidClassificationResultFacade(pSeq, result);
 

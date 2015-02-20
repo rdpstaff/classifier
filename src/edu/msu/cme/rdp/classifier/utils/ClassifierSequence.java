@@ -36,9 +36,12 @@ public class ClassifierSequence extends Sequence {
         * Fetches every overlapping word from the sequence string, changes each
         * word to integer format and saves in an array.
         */
-        GoodWordIterator iterator = new GoodWordIterator(this.getSeqString());
-        this.wordIndexArr = iterator.getWordArr();        
-        this.goodWordCount = wordIndexArr.length;
+        // Note when user provide the classification result, we don't get the sequence string
+        if ( !this.getSeqString().isEmpty()){
+            GoodWordIterator iterator = new GoodWordIterator(this.getSeqString());
+            this.wordIndexArr = iterator.getWordArr();        
+            this.goodWordCount = wordIndexArr.length;
+        }
     }
 
     /**
