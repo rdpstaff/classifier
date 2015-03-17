@@ -21,7 +21,7 @@ import java.io.IOException;
  */
 public class ClassifierSequence extends Sequence {
     private boolean reverse = false;
-    private Integer goodWordCount = null; // the number of words with only valid bases
+    private Integer goodWordCount = 0; // the number of words with only valid bases
     private int [] wordIndexArr = null; 
     /**
      * Creates new ParsedSequence.
@@ -39,8 +39,12 @@ public class ClassifierSequence extends Sequence {
         // Note when user provide the classification result, we don't get the sequence string
         if ( !this.getSeqString().isEmpty()){
             GoodWordIterator iterator = new GoodWordIterator(this.getSeqString());
-            this.wordIndexArr = iterator.getWordArr();        
-            this.goodWordCount = wordIndexArr.length;
+            try {
+                this.wordIndexArr = iterator.getWordArr();        
+                this.goodWordCount = wordIndexArr.length;
+            } catch (IllegalStateException e){
+                // don't do anything
+            }
         }
     }
 
