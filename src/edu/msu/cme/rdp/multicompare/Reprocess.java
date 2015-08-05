@@ -169,7 +169,7 @@ public class Reprocess {
               
             }
         } catch (Exception e) {
-            System.out.println("Command Error: " + e.getMessage());
+            System.err.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(120, "Reprocess [options] <Classification_allrank_result>[,idmappingfile] ...", "", options, "");
             return;
         }

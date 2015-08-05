@@ -97,7 +97,7 @@ public class ComparisonCmd {
                     wt.write(ClassificationResultFormatter.getOutput(result, format));
 
                 } catch (ShortSequenceException e) {
-                    System.out.println(e.getMessage());
+                    System.err.println(e.getMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -111,7 +111,7 @@ public class ComparisonCmd {
                     wt.write(ClassificationResultFormatter.getOutput(result, format));
 
                 } catch (ShortSequenceException e) {
-                    System.out.println(e.getMessage());
+                    System.err.println(e.getMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -301,7 +301,7 @@ public class ComparisonCmd {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Command Error: " + e.getMessage());
+            System.err.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(120, "ComparisonCmd", "", options, "", true);
             return;
         }

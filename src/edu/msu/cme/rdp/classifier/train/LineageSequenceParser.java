@@ -128,7 +128,7 @@ public class LineageSequenceParser {
             out.close();
             return out.toString();
         } catch (IOException e) {
-            System.out.println("In StringReader or StringWriter exception : " + e.getMessage());
+            System.err.println("In StringReader or StringWriter exception : " + e.getMessage());
         }
         return null;
     }

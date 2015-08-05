@@ -26,7 +26,7 @@ public class HierarchyVersion {
   	 try{
         versionPattern = Pattern.compile(regex);
       } catch(PatternSyntaxException pse){
-        System.out.println("There is a problem with the regular expression! " + regex);
+        System.err.println("There is a problem with the regular expression! " + regex);
       }
   }
   
