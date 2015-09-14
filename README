@@ -133,7 +133,8 @@ USAGE: ClassifierMain <subcommand> <subcommand args ...>
     Use subcommand "rm-dupseq" to remove identical sequences or any sequence contained by another sequence. Use subcommand "rm-partialseq" to remove partial sequences based on pairwise alignment to near-full length reference sequences.
 
     c. Plot intra taxon Similarity by fraction of matching 8-mer
-    Use subcommand "taxa-sim" to calculate and plot intra taxon Similarity by fraction of matching 8-mer (see example plots using fungal ITS training sets on RDP's poster http://rdp.cme.msu.edu/download/posters/MSA2014_RDP.pdf).
+    Use subcommand "taxa-sim" to calculate and plot intra taxon Similarity by fraction of matching 8-mer (see example plots using fungal ITS training sets on RDP's poster http://rdp.cme.msu.edu/download/posters/MSA2014_RDP.pdf). To run taxa-sim in Headless mode without GUI display, use the following options:
+	java -Djava.awt.headless=true -jar classifier.jar taxa-sim
 
     d. Estimate the accuracy of your own training data using leave-one-out testing
 	The program will output a tab-delimited test result file which can be loaded to Excel and plot the accuracy rates. It also contains the list of misclassified sequences and the rank when misclassified seqs group by taxon. Examine the result careful to spot errors in the taxonomy.
