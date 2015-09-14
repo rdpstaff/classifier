@@ -25,6 +25,7 @@ import edu.msu.cme.rdp.classifier.train.validation.distance.CompareTrainingSets;
 import edu.msu.cme.rdp.classifier.train.validation.leaveoneout.LeaveOneOutTesterMain;
 import edu.msu.cme.rdp.classifier.train.validation.movingwindow.MainMovingWindow;
 import edu.msu.cme.rdp.classifier.train.validation.distance.TaxaSimilarityMain;
+import edu.msu.cme.rdp.classifier.utils.ClassifierFactory;
 import edu.msu.cme.rdp.multicompare.Main;
 import edu.msu.cme.rdp.multicompare.MergeTaxonCount;
 import edu.msu.cme.rdp.multicompare.Reprocess;
@@ -51,7 +52,8 @@ public class ClassifierMain {
                 "\n\trm-dupseq     - remove identical or any sequence contained by another sequence" +
                 "\n\trm-partialseq - remove partial sequences" +
                 "\n\ttaxa-sim      - calculate and plot the similarities within taxa" +
-                "\n\ttrain         - retrain classifier" ;
+                "\n\ttrain         - retrain classifier" +
+                "\n\tversion       - taxonomy versions of the pre-compiled training sets" ;
                 //"\n\tsegment       - accuracy testing with short segments of the training sequences";
         if(args.length == 0 ) {
             System.err.println(usage);
@@ -63,6 +65,8 @@ public class ClassifierMain {
 
         if(cmd.equals("classify")) {
             Main.main(newArgs);
+        } else if(cmd.equals("version")) {
+            ClassifierFactory.getDefaultVersionInfo();
         } else if(cmd.equals("libcompare")) {
             ComparisonCmd.main(newArgs);
         } else if(cmd.equals("merge-detail")) {
