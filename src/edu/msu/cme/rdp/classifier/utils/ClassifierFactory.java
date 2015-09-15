@@ -230,7 +230,7 @@ public class ClassifierFactory {
     public static HashMap<String, HierarchyVersion> getDefaultVersionInfo() throws IOException, TrainingDataException, URISyntaxException{
         resetDefaultDataProp();
         HashMap<String, HierarchyVersion> versionInfoMap = new HashMap<String, HierarchyVersion> ();
-        final File jarFile = new File(ClassifierFactory.class.getProtectionDomain().getCodeSource().getLocation().toURI().g‌​etPath());
+        final File jarFile = new File(ClassifierFactory.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
         HashSet<String> geneList = new HashSet<String>();
         String new_dataDir = dataDir.substring(1);
         // if run with jar file, we 
