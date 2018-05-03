@@ -46,7 +46,7 @@
 
     <target name="download-traindata" unless="offline">
         <!-- download the trained data from web site  -->
-        <get src="http://rdp.cme.msu.edu/download/rdpclassifiertraindata/data.tgz"
+        <get src="https://rdp.cme.msu.edu/download/rdpclassifiertraindata/data.tgz"
              dest="${build.classes.dir}" usetimestamp="true"/>
        <untar src="${build.classes.dir}/data.tgz" dest="${build.classes.dir}/" compression="gzip" />
        <move file="${build.classes.dir}/data.tgz" tofile="${dist.dir}/data.tgz" overwrite="true" />
