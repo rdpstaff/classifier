@@ -177,7 +177,7 @@ public class LeaveOneOutTesterMain {
                 GoodWordIterator.setWordSize(kmer);
             }*/
         } catch (Exception e) {
-            System.out.println("Command Error: " + e.getMessage());
+            System.err.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(120, "LeaveOneOutTesterMain", "", options, "", true);
             return;
         }

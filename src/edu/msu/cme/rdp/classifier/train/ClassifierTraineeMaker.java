@@ -162,7 +162,7 @@ public class ClassifierTraineeMaker {
             }
             
         } catch (Exception e) {
-            System.out.println("Command Error: " + e.getMessage());
+            System.err.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(120, "train", "", options, "", true);
             return;
         }

@@ -68,7 +68,7 @@ public class ClassifierCmd {
                     wt.write(ClassificationResultFormatter.getOutput(result, format));
 
                 } catch (ShortSequenceException e) {
-                    System.out.println(e.getMessage());
+                    System.err.println(e.getMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -181,7 +181,7 @@ public class ClassifierCmd {
             queryFile = args[0];
             
         } catch (Exception e) {
-            System.out.println("Command Error: " + e.getMessage());
+            System.err.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(120, "ClassifierCmd [options] <samplefile>\nNote this is the legacy command for one sample classification ", "", options, "");
 
             return;

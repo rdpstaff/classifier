@@ -239,7 +239,7 @@ public class Main {
                 throw new IllegalArgumentException("Require at least one sample files");
             }
         }catch (Exception e) {
-            System.out.println("Command Error: " + e.getMessage());
+            System.err.println("Command Error: " + e.getMessage());
             new HelpFormatter().printHelp(80, " [options] <samplefile>[,idmappingfile] ...", "", options, "");
             return;
         }
