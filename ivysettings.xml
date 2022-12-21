@@ -1,0 +1,9 @@
+<ivysettings>
+    <settings defaultResolver="mainchain" />
+	<resolvers>
+		<chain name="mainchain">
+			<ibiblio name="public" m2compatible="true" />
+			<ibiblio name="maven" m2compatible="true" root="http://insecure.repo1.maven.org/maven2/" pattern="[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+		</chain>
+	</resolvers>
+</ivysettings>

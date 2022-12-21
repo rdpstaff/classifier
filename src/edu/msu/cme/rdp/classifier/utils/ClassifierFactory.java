@@ -17,9 +17,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * A factory to create a classifier with the training information defined by the property file.
@@ -216,5 +221,58 @@ public class ClassifierFactory {
     
     public String getTrainRank(){
         return trainingInfo.getTrainRank();
+    }
+    
+    /**
+     * 
+     * @return the training info for each gene in the pre-trained data directory
+     */
+    public static HashMap<String, HierarchyVersion> getDefaultVersionInfo() throws IOException, TrainingDataException, URISyntaxException{
+        resetDefaultDataProp();
+        HashMap<String, HierarchyVersion> versionInfoMap = new HashMap<String, HierarchyVersion> ();
+        final File jarFile = new File(ClassifierFactory.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+        HashSet<String> geneList = new HashSet<String>();
+        String new_dataDir = dataDir.substring(1);
+        // if run with jar file, we 
+        if(jarFile.isFile()) {  // Run with JAR file
+            final JarFile jar = new JarFile(jarFile);
+            final Enumeration<JarEntry> entries = jar.entries(); //gives ALL entries in jar
+            while(entries.hasMoreElements()) {
+                final String name = entries.nextElement().getName();
+                if (name.startsWith(new_dataDir)) { //filter according to the path
+                    String[] gene = name.replace(new_dataDir, "").split("/");
+                    if ( gene.length > 1)
+                        geneList.add(gene[0]);
+                }
+            }
+            jar.close();
+        }else {  // run from class path
+            File dataDirPath = new File(ClassifierFactory.class.getClass().getResource(dataDir).getFile());
+            for ( File gene: dataDirPath.listFiles()){
+                if (gene.isDirectory()) {
+                    geneList.add(gene.getName());
+                }
+            }
+        }   
+        // get the Classifier software version  
+         String classifierVersion = null;
+        // get the taxonomy training set version        
+        for ( String gene: geneList){
+            TrainingInfo trainingInfo = new TrainingInfo();
+            Properties temp_urlProperties = new Properties();
+            temp_urlProperties.load(ClassifierFactory.class.getClass().getResourceAsStream(dataDir + gene + "/" + defaultDataProp));
+            classifierVersion = temp_urlProperties.getProperty("classifierVersion");
+            InputStreamReader in = new InputStreamReader(ClassifierFactory.class.getResourceAsStream(dataDir + gene + "/" + temp_urlProperties.getProperty("probabilityIndex")));
+            try {
+                trainingInfo.createProbIndexArr(in);
+                versionInfoMap.put(gene, trainingInfo.getHierarchyInfo());
+                System.out.println("Gene:" + gene+ "\tTrainset No:" 
+                        + trainingInfo.getHierarchyInfo().getTrainsetNo() + "\tTaxonomy Version:" + trainingInfo.getHierarchyInfo().getVersion());
+            } finally {
+                in.close();
+            }
+        }
+        System.out.println("\nRDP Classifier Version:" + classifierVersion);
+        return versionInfoMap;
     }
 }
